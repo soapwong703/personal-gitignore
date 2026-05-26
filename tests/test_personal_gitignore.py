@@ -112,48 +112,7 @@ class PersonalGitignoreCliTests(unittest.TestCase):
             listed = self.run_cli(["list"], cwd=repo)
             self.assertIn("*.alias", listed.stdout)
 
-    def test_install_places_binaries_in_user_bin(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            home = Path(tmp) / "home"
-            home.mkdir()
-            repo = Path(tmp) / "repo"
-            repo.mkdir()
-            subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
-
-            env = os.environ.copy()
-            env["HOME"] = str(home)
-
-            install = self.run_cli(["install"], cwd=home, env=env)
-            self.assertEqual(install.returncode, 0, install.stderr)
-            self.assertIn("Use `pgi` as the default command.", install.stdout)
-
-            installed_cli = home / ".local" / "bin" / "personal-gitignore"
-            installed_alias = home / ".local" / "bin" / "pgi"
-            self.assertTrue(installed_cli.exists())
-            self.assertTrue(installed_alias.exists())
-
-            add = subprocess.run(
-                [str(installed_alias), "add", "*.from-install"],
-                cwd=repo,
-                env=env,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            self.assertEqual(add.returncode, 0, add.stderr)
-
-            listed = subprocess.run(
-                [str(installed_cli), "list"],
-                cwd=repo,
-                env=env,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            self.assertEqual(listed.returncode, 0, listed.stderr)
-            self.assertIn("*.from-install", listed.stdout)
-
-    def test_bin_dir_flag_rejected_for_non_install_commands(self):
+    def test_bin_dir_flag_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp) / "repo"
             repo.mkdir()
@@ -161,7 +120,7 @@ class PersonalGitignoreCliTests(unittest.TestCase):
 
             result = self.run_cli(["--bin-dir", str(repo), "list"], cwd=repo)
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("--bin-dir can only be used with the install command", result.stderr)
+            self.assertIn("unknown argument: --bin-dir", result.stderr)
 
     def test_install_script_supports_one_line_url_style_install(self):
         with tempfile.TemporaryDirectory() as tmp:

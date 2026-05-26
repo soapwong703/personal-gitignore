@@ -36,7 +36,6 @@ curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main
 Commands:
 
 - `setup` – ensure the file exists and print its path
-- `install` – install `pgi` (default command) and `personal-gitignore` compatibility binary to `~/.local/bin` (or `--bin-dir`)
 - `list` – show current rules
 - `add <pattern>` – add a rule
 - `remove <pattern>` – remove a rule
@@ -46,9 +45,6 @@ Commands:
 Examples:
 
 ```bash
-./pgi install
-export PATH="$HOME/.local/bin:$PATH"
-
 ./pgi add .env.local
 ./pgi remove .env.local
 ./pgi --global add *.machine
@@ -65,4 +61,3 @@ git push origin v0.1.0
 ```
 
 The release contains bundled archives with both `pgi` and `personal-gitignore` binaries for each target platform.
-

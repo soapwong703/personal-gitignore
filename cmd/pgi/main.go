@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,17 +15,15 @@ type options struct {
 	globalScope bool
 	command     string
 	pattern     string
-	binDir      string
 }
 
 var validCommands = map[string]struct{}{
-	"setup":   {},
-	"install": {},
-	"list":    {},
-	"add":     {},
-	"remove":  {},
-	"clear":   {},
-	"edit":    {},
+	"setup":  {},
+	"list":   {},
+	"add":    {},
+	"remove": {},
+	"clear":  {},
+	"edit":   {},
 }
 
 func runGit(args []string, cwd string, env []string) (string, error) {
@@ -146,70 +143,6 @@ func openEditor(path string, env []string) error {
 	return nil
 }
 
-func installCLI(binDir string) error {
-	targetDir := "~/.local/bin"
-	if binDir != "" {
-		targetDir = binDir
-	}
-	var err error
-	targetDir, err = expandHome(targetDir)
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(targetDir, 0o755); err != nil {
-		return err
-	}
-
-	exePath, err := os.Executable()
-	if err != nil {
-		return err
-	}
-
-	pgiPath := filepath.Join(targetDir, "pgi")
-	compatPath := filepath.Join(targetDir, "personal-gitignore")
-	if err := copyExecutable(exePath, pgiPath); err != nil {
-		return err
-	}
-	if err := copyExecutable(exePath, compatPath); err != nil {
-		return err
-	}
-
-	fmt.Println(pgiPath)
-	fmt.Println("Use `pgi` as the default command.")
-	fmt.Println(compatPath)
-	return nil
-}
-
-func copyExecutable(src, dst string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
-		return err
-	}
-	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o755)
-	if err != nil {
-		return err
-	}
-	_, copyErr := io.Copy(out, in)
-	closeErr := out.Close()
-	if copyErr != nil {
-		return copyErr
-	}
-	if closeErr != nil {
-		return closeErr
-	}
-
-	info, err := os.Stat(dst)
-	if err != nil {
-		return err
-	}
-	return os.Chmod(dst, info.Mode()|0o100)
-}
-
 func parseArgs(args []string) (options, error) {
 	opts := options{}
 	positionals := []string{}
@@ -221,12 +154,6 @@ func parseArgs(args []string) (options, error) {
 			opts.local = true
 		case "--global":
 			opts.globalScope = true
-		case "--bin-dir":
-			if i+1 >= len(args) {
-				return options{}, errors.New("--bin-dir requires a value")
-			}
-			i++
-			opts.binDir = args[i]
 		default:
 			if strings.HasPrefix(arg, "--") {
 				return options{}, fmt.Errorf("unknown argument: %s", arg)
@@ -279,19 +206,6 @@ func main() {
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
-	}
-
-	if opts.command == "install" {
-		if err := installCLI(opts.binDir); err != nil {
-			fmt.Fprintln(os.Stderr, "Error:", err)
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}
-
-	if opts.binDir != "" {
-		fmt.Fprintln(os.Stderr, "Error: --bin-dir can only be used with the install command")
 		os.Exit(1)
 	}
 
