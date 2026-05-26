@@ -54,3 +54,15 @@ export PATH="$HOME/.local/bin:$PATH"
 ./pgi --global add *.machine
 ./pgi edit
 ```
+
+## GitHub Release Build
+
+A GitHub Actions workflow builds and bundles CLI artifacts for Linux, macOS, and Windows, and publishes them to GitHub Releases when a tag matching `v*` is pushed.
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release contains bundled archives with both `pgi` and `personal-gitignore` binaries for each target platform.
+
