@@ -21,8 +21,6 @@ curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main
 pgi [--local|--global] <command> [pattern]
 ```
 
-`pgi` is the default command. `personal-gitignore` remains available as a compatibility alias.
-
 Commands:
 
 - `setup` – ensure the file exists and print its path
@@ -40,14 +38,3 @@ pgi remove .env.local
 pgi --global add '*.machine'
 pgi edit
 ```
-
-## GitHub Release Build
-
-A GitHub Actions workflow builds the release bundles for Linux, macOS, and Windows, then publishes them to GitHub Releases when a tag matching `v*` is pushed.
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-The release contains bundled archives with both executables for each target platform.

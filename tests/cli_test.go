@@ -41,15 +41,6 @@ func buildCLI(t *testing.T) string {
 	if err != nil {
 		t.Fatalf("build failed: %v\n%s", err, string(out))
 	}
-	// also provide compatibility alias
-	alias := filepath.Join(tmp, "personal-gitignore")
-	data, err := os.ReadFile(bin)
-	if err != nil {
-		t.Fatalf("read built binary: %v", err)
-	}
-	if err := os.WriteFile(alias, data, 0o755); err != nil {
-		t.Fatalf("write alias: %v", err)
-	}
 	return bin
 }
 

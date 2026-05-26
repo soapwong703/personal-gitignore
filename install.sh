@@ -33,7 +33,7 @@ if [ "$OS" = "windows" ]; then
   ASSET_EXT="zip"
 fi
 
-ASSET="personal-gitignore_${OS}_${ARCH}.${ASSET_EXT}"
+ASSET="pgi_${OS}_${ARCH}.${ASSET_EXT}"
 URL="${RELEASE_BASE}/${ASSET}"
 
 TMP_DIR="$(mktemp -d)"
@@ -57,9 +57,7 @@ else
   tar -C "$TMP_DIR" -xzf "$ARCHIVE"
 fi
 
-PKG_DIR="$TMP_DIR/personal-gitignore_${OS}_${ARCH}"
+PKG_DIR="$TMP_DIR/pgi_${OS}_${ARCH}"
 install -m 0755 "$PKG_DIR/pgi" "$BIN_DIR/pgi"
-install -m 0755 "$PKG_DIR/personal-gitignore" "$BIN_DIR/personal-gitignore"
 
 echo "Installed: $BIN_DIR/pgi"
-echo "Installed: $BIN_DIR/personal-gitignore"

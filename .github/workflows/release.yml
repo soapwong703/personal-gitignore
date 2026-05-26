@@ -56,21 +56,18 @@ jobs:
           GOOS="$GOOS" GOARCH="$GOARCH" CGO_ENABLED=0 \
             go build -trimpath -ldflags="-s -w" -o "bin/pgi${ext}" ./cmd/pgi
 
-          cp "bin/pgi${ext}" "bin/personal-gitignore${ext}"
-
-          package_dir="package/personal-gitignore_${GOOS}_${GOARCH}"
+          package_dir="package/pgi_${GOOS}_${GOARCH}"
           mkdir -p "$package_dir"
           cp "bin/pgi${ext}" "$package_dir/pgi${ext}"
-          cp "bin/personal-gitignore${ext}" "$package_dir/personal-gitignore${ext}"
           cp README.md "$package_dir/README.md"
 
           if [ "$GOOS" = "windows" ]; then
             (
               cd package
-              zip -r "../dist/personal-gitignore_${GOOS}_${GOARCH}.zip" "personal-gitignore_${GOOS}_${GOARCH}"
+              zip -r "../dist/pgi_${GOOS}_${GOARCH}.zip" "pgi_${GOOS}_${GOARCH}"
             )
           else
-            tar -C package -czf "dist/personal-gitignore_${GOOS}_${GOARCH}.tar.gz" "personal-gitignore_${GOOS}_${GOARCH}"
+            tar -C package -czf "dist/pgi_${GOOS}_${GOARCH}.tar.gz" "pgi_${GOOS}_${GOARCH}"
           fi
 
       - name: Upload bundled artifact
