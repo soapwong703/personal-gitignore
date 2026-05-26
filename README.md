@@ -15,7 +15,10 @@ The intended distribution is via GitHub Release bundles produced by CI.
 
 1. Open the latest release: https://github.com/soapwong703/personal-gitignore/releases/latest
 2. Download the archive for your platform:
-   - Linux/macOS: `personal-gitignore_{os}_{arch}.tar.gz` (for example: `personal-gitignore_linux_amd64.tar.gz` or `personal-gitignore_darwin_arm64.tar.gz`)
+   - Linux/macOS: `personal-gitignore_{os}_{arch}.tar.gz` where:
+     - `os`: `linux` or `darwin`
+     - `arch`: `amd64` or `arm64`
+     - for example: `personal-gitignore_linux_amd64.tar.gz` or `personal-gitignore_darwin_arm64.tar.gz`
    - Windows: `personal-gitignore_windows_amd64.zip`
 3. Extract the archive and move `pgi` to a directory in your `PATH` (for example `~/.local/bin`).
 4. (Optional) Keep `personal-gitignore` as a compatibility alias.
@@ -74,3 +77,11 @@ If you want to build locally instead of using bundled release artifacts:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
 ```
+
+> This installer builds from source, so Go is required on the installation machine.
+>
+> Custom install directory:
+>
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh -s -- --bin-dir "$HOME/bin"
+> ```
