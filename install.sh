@@ -54,5 +54,5 @@ chmod u+x "${BIN_DIR}/personal-gitignore" "${BIN_DIR}/pgi"
 
 echo "Successfully installed:"
 echo "${BIN_DIR}/pgi"
-echo "Use \`pgi\` as the default command."
+echo 'Use `pgi` as the default command.'
 echo "${BIN_DIR}/personal-gitignore"
