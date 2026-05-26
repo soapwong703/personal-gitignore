@@ -68,6 +68,10 @@ func TestLocalInlineCRUDUsesGitInfoExclude(t *testing.T) {
 	if err != nil {
 		t.Fatalf("mktemp: %v", err)
 	}
+	nested := filepath.Join(tmp, "nested", "dir")
+	if err := os.MkdirAll(nested, 0o755); err != nil {
+		t.Fatalf("mkdir nested: %v", err)
+	}
 	// init git repo
 	cmd := exec.Command("git", "init")
 	cmd.Dir = tmp
@@ -76,15 +80,15 @@ func TestLocalInlineCRUDUsesGitInfoExclude(t *testing.T) {
 	}
 
 	// run setup
-	if _, stderr, err := runBin(t, bin, tmp, nil, "setup"); err != nil {
+	if _, stderr, err := runBin(t, bin, nested, nil, "setup"); err != nil {
 		t.Fatalf("setup failed: %v, %s", err, stderr)
 	}
 
-	if _, stderr, err := runBin(t, bin, tmp, nil, "add", "*.local"); err != nil {
+	if _, stderr, err := runBin(t, bin, nested, nil, "add", "*.local"); err != nil {
 		t.Fatalf("add failed: %v, %s", err, stderr)
 	}
 
-	out, _, err := runBin(t, bin, tmp, nil, "list")
+	out, _, err := runBin(t, bin, nested, nil, "list")
 	if err != nil {
 		t.Fatalf("list failed: %v", err)
 	}
@@ -92,11 +96,11 @@ func TestLocalInlineCRUDUsesGitInfoExclude(t *testing.T) {
 		t.Fatalf("expected pattern in list: %s", out)
 	}
 
-	if _, stderr, err := runBin(t, bin, tmp, nil, "remove", "*.local"); err != nil {
+	if _, stderr, err := runBin(t, bin, nested, nil, "remove", "*.local"); err != nil {
 		t.Fatalf("remove failed: %v, %s", err, stderr)
 	}
 
-	out, _, err = runBin(t, bin, tmp, nil, "list")
+	out, _, err = runBin(t, bin, nested, nil, "list")
 	if err != nil {
 		t.Fatalf("list failed: %v", err)
 	}
@@ -107,6 +111,32 @@ func TestLocalInlineCRUDUsesGitInfoExclude(t *testing.T) {
 	excludeFile := filepath.Join(tmp, ".git", "info", "exclude")
 	if _, err := os.Stat(excludeFile); err != nil {
 		t.Fatalf("exclude file missing: %v", err)
+	}
+}
+
+func TestAddPatternStartingWithDash(t *testing.T) {
+	bin := buildCLI(t)
+
+	tmpRepo, err := os.MkdirTemp("", "repo-")
+	if err != nil {
+		t.Fatalf("mktemp: %v", err)
+	}
+	init := exec.Command("git", "init")
+	init.Dir = tmpRepo
+	if out, err := init.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v, %s", err, string(out))
+	}
+
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "add", "--cache"); err != nil {
+		t.Fatalf("add --cache failed: %v, %s", err, stderr)
+	}
+
+	out, _, err := runBin(t, bin, tmpRepo, nil, "list")
+	if err != nil {
+		t.Fatalf("list failed: %v", err)
+	}
+	if !strings.Contains(out, "--cache") {
+		t.Fatalf("expected --cache in list, got: %s", out)
 	}
 }
 

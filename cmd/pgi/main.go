@@ -46,11 +46,14 @@ func runGit(args []string, cwd string, env []string) (string, error) {
 }
 
 func resolveLocalIgnoreFile(cwd string, env []string) (string, error) {
-	repoRoot, err := runGit([]string{"rev-parse", "--show-toplevel"}, cwd, env)
+	gitPath, err := runGit([]string{"rev-parse", "--git-path", "info/exclude"}, cwd, env)
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(repoRoot, ".git", "info", "exclude"), nil
+	if filepath.IsAbs(gitPath) {
+		return gitPath, nil
+	}
+	return filepath.Join(cwd, gitPath), nil
 }
 
 func resolveGlobalIgnoreFile(env []string) (string, error) {
@@ -146,20 +149,26 @@ func openEditor(path string, env []string) error {
 func parseArgs(args []string) (options, error) {
 	opts := options{}
 	positionals := []string{}
+	commandSeen := false
 
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
-		switch arg {
-		case "--local":
-			opts.local = true
-		case "--global":
-			opts.globalScope = true
-		default:
-			if strings.HasPrefix(arg, "--") {
-				return options{}, fmt.Errorf("unknown argument: %s", arg)
+		if !commandSeen {
+			switch arg {
+			case "--local":
+				opts.local = true
+			case "--global":
+				opts.globalScope = true
+			default:
+				if strings.HasPrefix(arg, "--") {
+					return options{}, fmt.Errorf("unknown argument: %s", arg)
+				}
+				commandSeen = true
+				positionals = append(positionals, arg)
 			}
-			positionals = append(positionals, arg)
+			continue
 		}
+		positionals = append(positionals, arg)
 	}
 
 	if opts.local && opts.globalScope {
