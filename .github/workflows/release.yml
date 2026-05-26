@@ -59,13 +59,20 @@ jobs:
           cp "bin/personal-gitignore${ext}" "$package_dir/personal-gitignore${ext}"
           cp README.md "$package_dir/README.md"
 
-          tar -C package -czf "dist/personal-gitignore_${GOOS}_${GOARCH}.tar.gz" "personal-gitignore_${GOOS}_${GOARCH}"
+          if [ "$GOOS" = "windows" ]; then
+            (
+              cd package
+              zip -r "../dist/personal-gitignore_${GOOS}_${GOARCH}.zip" "personal-gitignore_${GOOS}_${GOARCH}"
+            )
+          else
+            tar -C package -czf "dist/personal-gitignore_${GOOS}_${GOARCH}.tar.gz" "personal-gitignore_${GOOS}_${GOARCH}"
+          fi
 
       - name: Upload bundled artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dist/*.tar.gz
+          path: dist/*
 
   release:
     name: Publish GitHub Release
@@ -83,5 +90,5 @@ jobs:
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.tar.gz
+          files: dist/*
           generate_release_notes: true
