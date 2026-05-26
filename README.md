@@ -9,29 +9,33 @@ A command line tool to manage personal gitignore rules that never get committed.
 
 Both inline mode and editor mode operate on the same underlying file for the selected scope.
 
+## Install (bundled release artifacts)
+
+The intended distribution is via GitHub Release bundles produced by CI.
+
+1. Open the latest release: https://github.com/soapwong703/personal-gitignore/releases/latest
+2. Download the archive for your platform:
+   - Linux/macOS: `personal-gitignore_<os>_<arch>.tar.gz`
+   - Windows: `personal-gitignore_windows_amd64.zip`
+3. Extract the archive and move `pgi` to a directory in your `PATH` (for example `~/.local/bin`).
+4. (Optional) Keep `personal-gitignore` as a compatibility alias.
+
+Example (Linux/macOS):
+
+```bash
+tar -xzf personal-gitignore_linux_amd64.tar.gz
+install -m 0755 personal-gitignore_linux_amd64/pgi ~/.local/bin/pgi
+install -m 0755 personal-gitignore_linux_amd64/personal-gitignore ~/.local/bin/personal-gitignore
+export PATH="$HOME/.local/bin:$PATH"
+```
+
 ## Usage
 
 ```bash
 pgi [--local|--global] <command> [pattern]
 ```
 
-`pgi` is the default command. `personal-gitignore` is still available for compatibility.
-Running `./pgi` directly from this repository uses `go run`, so Go is required.
-
-Install directly from GitHub in one line:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-> The one-line installer builds a native binary, so Go is required during installation.
-
-Custom install directory:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh -s -- --bin-dir "$HOME/bin"
-```
+`pgi` is the default command. `personal-gitignore` is available as a compatibility alias.
 
 Commands:
 
@@ -61,3 +65,11 @@ git push origin v0.1.0
 ```
 
 The release contains bundled archives with both `pgi` and `personal-gitignore` binaries for each target platform.
+
+## Alternative: build from source installer
+
+If you want to build locally instead of using bundled release artifacts:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
+```
