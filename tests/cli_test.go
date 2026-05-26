@@ -61,7 +61,7 @@ func runBin(t *testing.T, bin string, cwd string, env map[string]string, args ..
 	return stdout.String(), stderr.String(), err
 }
 
-func TestLocalInlineCRUDUsesGitInfoExclude(t *testing.T) {
+func TestLocalInlineCRUDAutoInitializesGitInfoExclude(t *testing.T) {
 	bin := buildCLI(t)
 
 	tmp, err := os.MkdirTemp("", "repo-")
@@ -77,11 +77,6 @@ func TestLocalInlineCRUDUsesGitInfoExclude(t *testing.T) {
 	cmd.Dir = tmp
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("git init: %v\n%s", err, string(out))
-	}
-
-	// run setup
-	if _, stderr, err := runBin(t, bin, nested, nil, "setup"); err != nil {
-		t.Fatalf("setup failed: %v, %s", err, stderr)
 	}
 
 	if _, stderr, err := runBin(t, bin, nested, nil, "add", "*.local"); err != nil {

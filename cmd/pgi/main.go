@@ -18,7 +18,6 @@ type options struct {
 }
 
 var validCommands = map[string]struct{}{
-	"setup":  {},
 	"list":   {},
 	"add":    {},
 	"remove": {},
@@ -244,9 +243,6 @@ func main() {
 	}
 
 	switch opts.command {
-	case "setup":
-		fmt.Println(ignoreFile)
-		return
 	case "edit":
 		if err := openEditor(ignoreFile, env); err != nil {
 			fmt.Fprintln(os.Stderr, "Error:", err)

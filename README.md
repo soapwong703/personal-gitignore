@@ -23,12 +23,13 @@ pgi [--local|--global] <command> [pattern]
 
 Commands:
 
-- `setup` – ensure the file exists and print its path
 - `list` – show current rules
 - `add <pattern>` – add a rule
 - `remove <pattern>` – remove a rule
 - `clear` – remove all rules
 - `edit` – open the selected file in your editor (`$EDITOR`/`$VISUAL`)
+
+The target file is created automatically the first time you run a command.
 
 Examples:
 
