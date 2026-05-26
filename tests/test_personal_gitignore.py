@@ -151,6 +151,16 @@ class PersonalGitignoreCliTests(unittest.TestCase):
             self.assertEqual(listed.returncode, 0, listed.stderr)
             self.assertIn("*.from-install", listed.stdout)
 
+    def test_bin_dir_flag_rejected_for_non_install_commands(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            repo.mkdir()
+            subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+
+            result = self.run_cli(["--bin-dir", str(repo), "list"], cwd=repo)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("--bin-dir can only be used with the install command", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

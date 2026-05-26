@@ -99,7 +99,7 @@ def install_cli(bin_dir=None):
         destination = target_dir / name
         shutil.copy2(source, destination)
         mode = destination.stat().st_mode
-        destination.chmod((mode | stat.S_IXUSR) & ~stat.S_IXGRP & ~stat.S_IXOTH)
+        destination.chmod(mode | stat.S_IXUSR)
         installed.append(destination)
 
     for path in installed:
@@ -133,6 +133,8 @@ def main(argv=None):
         if args.command == "install":
             install_cli(args.bin_dir)
             return 0
+        if args.bin_dir:
+            raise RuntimeError("--bin-dir can only be used with the install command")
 
         ignore_file = resolve_global_ignore_file(env) if args.global_scope else resolve_local_ignore_file(cwd, env)
         ensure_file(ignore_file)
