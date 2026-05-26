@@ -36,6 +36,11 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Run tests
+        run: |
+          set -eu
+          go test ./...
+
       - name: Build and bundle
         env:
           GOOS: ${{ matrix.goos }}

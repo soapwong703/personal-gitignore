@@ -9,28 +9,10 @@ A command line tool to manage personal gitignore rules that never get committed.
 
 Both inline mode and editor mode operate on the same underlying file for the selected scope.
 
-## Install (bundled release artifacts)
+## Install
 
-The intended distribution is via GitHub Release bundles produced by CI.
-
-1. Open the latest release: https://github.com/soapwong703/personal-gitignore/releases/latest
-2. Download the archive for your platform:
-   - Linux/macOS: `personal-gitignore_{os}_{arch}.tar.gz` where:
-     - `os`: `linux` or `darwin`
-     - `arch`: `amd64` or `arm64`
-     - For example: `personal-gitignore_linux_amd64.tar.gz` or `personal-gitignore_darwin_arm64.tar.gz`
-   - Windows: `personal-gitignore_windows_amd64.zip`
-3. Extract the archive and move `pgi` to a directory in your `PATH` (e.g., `~/.local/bin`).
-4. (Optional) Keep `personal-gitignore` as a compatibility alias.
-
-Example (Linux/macOS):
-
-```bash
-tar -xzf personal-gitignore_linux_amd64.tar.gz
-mkdir -p ~/.local/bin
-install -m 0755 personal-gitignore_linux_amd64/pgi ~/.local/bin/pgi
-install -m 0755 personal-gitignore_linux_amd64/personal-gitignore ~/.local/bin/personal-gitignore
-export PATH="$HOME/.local/bin:$PATH"
+```sh
+curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
 ```
 
 ## Usage
@@ -39,7 +21,7 @@ export PATH="$HOME/.local/bin:$PATH"
 pgi [--local|--global] <command> [pattern]
 ```
 
-`pgi` is the default command. `personal-gitignore` is available as a compatibility alias.
+`pgi` is the default command. `personal-gitignore` remains available as a compatibility alias.
 
 Commands:
 
@@ -61,27 +43,11 @@ pgi edit
 
 ## GitHub Release Build
 
-A GitHub Actions workflow builds and bundles CLI artifacts for Linux, macOS, and Windows, and publishes them to GitHub Releases when a tag matching `v*` is pushed.
+A GitHub Actions workflow builds the release bundles for Linux, macOS, and Windows, then publishes them to GitHub Releases when a tag matching `v*` is pushed.
 
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The release contains bundled archives with both `pgi` and `personal-gitignore` binaries for each target platform.
-
-## Alternative: build from source installer
-
-If you want to build locally instead of using bundled release artifacts:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
-```
-
-> This installer builds from source, so Go is required on the installation machine.
->
-> Custom install directory:
->
-> ```bash
-> curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh -s -- --bin-dir "$HOME/bin"
-> ```
+The release contains bundled archives with both executables for each target platform.

@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 set -eu
 
-BASE_URL="${PGI_INSTALL_BASE_URL:-https://raw.githubusercontent.com/soapwong703/personal-gitignore/main}"
 BIN_DIR="${HOME}/.local/bin"
+RELEASE_BASE="https://github.com/soapwong703/personal-gitignore/releases/latest/download"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -21,48 +21,45 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-if ! command -v go >/dev/null 2>&1; then
-  echo "Error: Go is required to install pgi." >&2
+OS=$(uname | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64|amd64) ARCH=amd64 ;;
+  aarch64|arm64) ARCH=arm64 ;;
+esac
+
+ASSET_EXT="tar.gz"
+if [ "$OS" = "windows" ]; then
+  ASSET_EXT="zip"
+fi
+
+ASSET="personal-gitignore_${OS}_${ARCH}.${ASSET_EXT}"
+URL="${RELEASE_BASE}/${ASSET}"
+
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+ARCHIVE="$TMP_DIR/$ASSET"
+
+mkdir -p "$BIN_DIR"
+
+if command -v curl >/dev/null 2>&1; then
+  curl -fsSL "$URL" -o "$ARCHIVE"
+elif command -v wget >/dev/null 2>&1; then
+  wget -qO "$ARCHIVE" "$URL"
+else
+  echo "Error: curl or wget is required to download the release asset." >&2
   exit 1
 fi
 
-mkdir -p "$BIN_DIR"
-TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT
-SRC_DIR="$TMP_DIR/src"
-mkdir -p "$SRC_DIR/cmd/pgi"
+if [ "$ASSET_EXT" = "zip" ]; then
+  unzip -q "$ARCHIVE" -d "$TMP_DIR"
+else
+  tar -C "$TMP_DIR" -xzf "$ARCHIVE"
+fi
 
-download() {
-  url="$1"
-  destination="$2"
-  case "$url" in
-    file://*)
-      cp "${url#file://}" "$destination"
-      ;;
-    *)
-      if command -v curl >/dev/null 2>&1; then
-        curl -fsSL "$url" -o "$destination"
-      elif command -v wget >/dev/null 2>&1; then
-        wget -qO "$destination" "$url"
-      else
-        echo "Error: curl or wget is required to download files." >&2
-        exit 1
-      fi
-      ;;
-  esac
-}
+PKG_DIR="$TMP_DIR/personal-gitignore_${OS}_${ARCH}"
+install -m 0755 "$PKG_DIR/pgi" "$BIN_DIR/pgi"
+install -m 0755 "$PKG_DIR/personal-gitignore" "$BIN_DIR/personal-gitignore"
 
-download "${BASE_URL}/go.mod" "${SRC_DIR}/go.mod"
-download "${BASE_URL}/cmd/pgi/main.go" "${SRC_DIR}/cmd/pgi/main.go"
-
-(
-  cd "$SRC_DIR"
-  go build -o "$BIN_DIR/pgi" ./cmd/pgi
-)
-cp "$BIN_DIR/pgi" "$BIN_DIR/personal-gitignore"
-chmod u+x "$BIN_DIR/pgi" "$BIN_DIR/personal-gitignore"
-
-echo "Successfully installed:"
-echo "${BIN_DIR}/pgi"
-echo 'Use `pgi` as the default command.'
-echo "${BIN_DIR}/personal-gitignore"
+echo "Installed: $BIN_DIR/pgi"
+echo "Installed: $BIN_DIR/personal-gitignore"
