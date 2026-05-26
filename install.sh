@@ -21,9 +21,16 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+if ! command -v go >/dev/null 2>&1; then
+  echo "Error: Go is required to install pgi." >&2
+  exit 1
+fi
+
 mkdir -p "$BIN_DIR"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
+SRC_DIR="$TMP_DIR/src"
+mkdir -p "$SRC_DIR/cmd/pgi"
 
 download() {
   url="$1"
@@ -45,12 +52,15 @@ download() {
   esac
 }
 
-download "${BASE_URL}/pgi" "${TMP_DIR}/pgi"
-download "${BASE_URL}/personal-gitignore" "${TMP_DIR}/personal-gitignore"
+download "${BASE_URL}/go.mod" "${SRC_DIR}/go.mod"
+download "${BASE_URL}/cmd/pgi/main.go" "${SRC_DIR}/cmd/pgi/main.go"
 
-cp "${TMP_DIR}/pgi" "${BIN_DIR}/pgi"
-cp "${TMP_DIR}/personal-gitignore" "${BIN_DIR}/personal-gitignore"
-chmod u+x "${BIN_DIR}/personal-gitignore" "${BIN_DIR}/pgi"
+(
+  cd "$SRC_DIR"
+  go build -o "$BIN_DIR/pgi" ./cmd/pgi
+)
+cp "$BIN_DIR/pgi" "$BIN_DIR/personal-gitignore"
+chmod u+x "$BIN_DIR/pgi" "$BIN_DIR/personal-gitignore"
 
 echo "Successfully installed:"
 echo "${BIN_DIR}/pgi"

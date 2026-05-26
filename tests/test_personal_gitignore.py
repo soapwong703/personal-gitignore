@@ -166,9 +166,12 @@ class PersonalGitignoreCliTests(unittest.TestCase):
     def test_install_script_supports_one_line_url_style_install(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "source"
-            source.mkdir()
-            (source / "personal-gitignore").write_text(CLI.read_text(encoding="utf-8"), encoding="utf-8")
-            (source / "pgi").write_text(ALIAS.read_text(encoding="utf-8"), encoding="utf-8")
+            (source / "cmd" / "pgi").mkdir(parents=True)
+            (source / "go.mod").write_text((REPO_ROOT / "go.mod").read_text(encoding="utf-8"), encoding="utf-8")
+            (source / "cmd" / "pgi" / "main.go").write_text(
+                (REPO_ROOT / "cmd" / "pgi" / "main.go").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
 
             home = Path(tmp) / "home"
             home.mkdir()

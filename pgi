@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-exec "$SCRIPT_DIR/personal-gitignore" "$@"
+cd "$SCRIPT_DIR"
+exec go run ./cmd/pgi "$@"
