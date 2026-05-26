@@ -18,9 +18,9 @@ The intended distribution is via GitHub Release bundles produced by CI.
    - Linux/macOS: `personal-gitignore_{os}_{arch}.tar.gz` where:
      - `os`: `linux` or `darwin`
      - `arch`: `amd64` or `arm64`
-     - for example: `personal-gitignore_linux_amd64.tar.gz` or `personal-gitignore_darwin_arm64.tar.gz`
+     - For example: `personal-gitignore_linux_amd64.tar.gz` or `personal-gitignore_darwin_arm64.tar.gz`
    - Windows: `personal-gitignore_windows_amd64.zip`
-3. Extract the archive and move `pgi` to a directory in your `PATH` (for example `~/.local/bin`).
+3. Extract the archive and move `pgi` to a directory in your `PATH` (e.g., `~/.local/bin`).
 4. (Optional) Keep `personal-gitignore` as a compatibility alias.
 
 Example (Linux/macOS):
