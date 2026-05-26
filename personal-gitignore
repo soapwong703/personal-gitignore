@@ -3,6 +3,8 @@
 import argparse
 import os
 import shlex
+import shutil
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -80,6 +82,29 @@ def open_editor(path, env):
         raise RuntimeError(f"Editor exited with status {completed.returncode}")
 
 
+def install_cli(env, bin_dir=None):
+    target_dir = Path(os.path.expanduser(bin_dir)) if bin_dir else Path(os.path.expanduser("~/.local/bin"))
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    source_dir = Path(__file__).resolve().parent
+    entries = {
+        "personal-gitignore": source_dir / "personal-gitignore",
+        "pgi": source_dir / "pgi",
+    }
+
+    installed = []
+    for name, source in entries.items():
+        if not source.exists():
+            raise RuntimeError(f"Missing source executable: {source}")
+        destination = target_dir / name
+        shutil.copy2(source, destination)
+        destination.chmod(destination.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        installed.append(destination)
+
+    for path in installed:
+        print(path)
+
+
 def parse_args(argv):
     parser = argparse.ArgumentParser(
         description="Manage personal gitignore rules locally (.git/info/exclude) or globally.",
@@ -90,10 +115,11 @@ def parse_args(argv):
 
     parser.add_argument(
         "command",
-        choices=["setup", "list", "add", "remove", "clear", "edit"],
+        choices=["setup", "install", "list", "add", "remove", "clear", "edit"],
         help="Inline mode: list/add/remove/clear. Editor mode: edit.",
     )
     parser.add_argument("pattern", nargs="?", help="Pattern used by add/remove commands")
+    parser.add_argument("--bin-dir", help="Install location for the install command (default: ~/.local/bin)")
     return parser.parse_args(argv)
 
 
@@ -103,6 +129,10 @@ def main(argv=None):
     cwd = os.getcwd()
 
     try:
+        if args.command == "install":
+            install_cli(env, args.bin_dir)
+            return 0
+
         ignore_file = resolve_global_ignore_file(env) if args.global_scope else resolve_local_ignore_file(cwd, env)
         ensure_file(ignore_file)
 

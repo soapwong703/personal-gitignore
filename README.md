@@ -20,6 +20,7 @@ Both inline mode and editor mode operate on the same underlying file for the sel
 Commands:
 
 - `setup` – ensure the file exists and print its path
+- `install` – install `personal-gitignore` and `pgi` to `~/.local/bin` (or `--bin-dir`)
 - `list` – show current rules
 - `add <pattern>` – add a rule
 - `remove <pattern>` – remove a rule
@@ -29,6 +30,9 @@ Commands:
 Examples:
 
 ```bash
+./personal-gitignore install
+export PATH="$HOME/.local/bin:$PATH"
+
 ./personal-gitignore add .env.local
 ./personal-gitignore remove .env.local
 ./personal-gitignore --global add *.machine
