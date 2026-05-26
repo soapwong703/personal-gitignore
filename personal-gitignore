@@ -104,8 +104,7 @@ def install_cli(bin_dir=None):
 
     for path in installed:
         print(path)
-        if path.name == "pgi":
-            print("Use `pgi` as the default command.")
+    print("Use `pgi` as the default command.")
 
 
 def parse_args(argv):
