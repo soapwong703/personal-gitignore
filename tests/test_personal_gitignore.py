@@ -8,6 +8,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CLI = REPO_ROOT / "personal-gitignore"
 ALIAS = REPO_ROOT / "pgi"
+INSTALLER = REPO_ROOT / "install.sh"
 
 
 class PersonalGitignoreCliTests(unittest.TestCase):
@@ -160,6 +161,60 @@ class PersonalGitignoreCliTests(unittest.TestCase):
             result = self.run_cli(["--bin-dir", str(repo), "list"], cwd=repo)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("--bin-dir can only be used with the install command", result.stderr)
+
+    def test_install_script_supports_one_line_url_style_install(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source"
+            source.mkdir()
+            (source / "personal-gitignore").write_text(CLI.read_text(encoding="utf-8"), encoding="utf-8")
+            (source / "pgi").write_text(ALIAS.read_text(encoding="utf-8"), encoding="utf-8")
+
+            home = Path(tmp) / "home"
+            home.mkdir()
+            bin_dir = home / "bin"
+
+            env = os.environ.copy()
+            env["HOME"] = str(home)
+            env["PGI_INSTALL_BASE_URL"] = f"file://{source}"
+
+            install = subprocess.run(
+                ["sh", str(INSTALLER), "--bin-dir", str(bin_dir)],
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(install.returncode, 0, install.stderr)
+
+            installed_cli = bin_dir / "personal-gitignore"
+            installed_alias = bin_dir / "pgi"
+            self.assertTrue(installed_cli.exists())
+            self.assertTrue(installed_alias.exists())
+
+            repo = Path(tmp) / "repo"
+            repo.mkdir()
+            subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+
+            add = subprocess.run(
+                [str(installed_alias), "add", "*.from-url-install"],
+                cwd=repo,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(add.returncode, 0, add.stderr)
+
+            listed = subprocess.run(
+                [str(installed_cli), "list"],
+                cwd=repo,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(listed.returncode, 0, listed.stderr)
+            self.assertIn("*.from-url-install", listed.stdout)
 
 
 if __name__ == "__main__":

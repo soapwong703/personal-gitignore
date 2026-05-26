@@ -17,6 +17,19 @@ Both inline mode and editor mode operate on the same underlying file for the sel
 ./pgi [--local|--global] <command> [pattern]
 ```
 
+Install directly from GitHub in one line:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Custom install directory:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh -s -- --bin-dir "$HOME/bin"
+```
+
 Commands:
 
 - `setup` – ensure the file exists and print its path
