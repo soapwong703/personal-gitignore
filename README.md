@@ -11,8 +11,32 @@ Both inline mode and editor mode operate on the same underlying file for the sel
 
 ## Install
 
+macOS and Linux:
+
 ```sh
 curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
+```
+
+Windows PowerShell:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.ps1 | iex"
+```
+
+## Uninstall
+
+This removes the installed command only. Your ignore files remain untouched.
+
+macOS and Linux:
+
+```sh
+rm -f "$HOME/.local/bin/pgi"
+```
+
+Windows PowerShell:
+
+```powershell
+Remove-Item -Force "$HOME\.local\bin\pgi.exe"
 ```
 
 ## Usage

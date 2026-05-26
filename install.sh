@@ -21,19 +21,26 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-OS=$(uname | tr '[:upper:]' '[:lower:]')
+case "$(uname -s)" in
+  Darwin) OS="darwin" ;;
+  Linux) OS="linux" ;;
+  *)
+    echo "Error: install.sh supports macOS and Linux only. Use install.ps1 on Windows." >&2
+    exit 1
+    ;;
+esac
+
 ARCH=$(uname -m)
 case "$ARCH" in
   x86_64|amd64) ARCH=amd64 ;;
   aarch64|arm64) ARCH=arm64 ;;
+  *)
+    echo "Error: unsupported architecture: $ARCH" >&2
+    exit 1
+    ;;
 esac
 
-ASSET_EXT="tar.gz"
-if [ "$OS" = "windows" ]; then
-  ASSET_EXT="zip"
-fi
-
-ASSET="pgi_${OS}_${ARCH}.${ASSET_EXT}"
+ASSET="pgi_${OS}_${ARCH}.tar.gz"
 URL="${RELEASE_BASE}/${ASSET}"
 
 TMP_DIR="$(mktemp -d)"
@@ -51,11 +58,7 @@ else
   exit 1
 fi
 
-if [ "$ASSET_EXT" = "zip" ]; then
-  unzip -q "$ARCHIVE" -d "$TMP_DIR"
-else
-  tar -C "$TMP_DIR" -xzf "$ARCHIVE"
-fi
+tar -C "$TMP_DIR" -xzf "$ARCHIVE"
 
 PKG_DIR="$TMP_DIR/pgi_${OS}_${ARCH}"
 install -m 0755 "$PKG_DIR/pgi" "$BIN_DIR/pgi"
