@@ -82,7 +82,7 @@ def open_editor(path, env):
         raise RuntimeError(f"Editor exited with status {completed.returncode}")
 
 
-def install_cli(env, bin_dir=None):
+def install_cli(bin_dir=None):
     target_dir = Path(os.path.expanduser(bin_dir)) if bin_dir else Path(os.path.expanduser("~/.local/bin"))
     target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -98,7 +98,8 @@ def install_cli(env, bin_dir=None):
             raise RuntimeError(f"Missing source executable: {source}")
         destination = target_dir / name
         shutil.copy2(source, destination)
-        destination.chmod(destination.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        mode = destination.stat().st_mode
+        destination.chmod((mode | stat.S_IXUSR) & ~stat.S_IXGRP & ~stat.S_IXOTH)
         installed.append(destination)
 
     for path in installed:
@@ -130,7 +131,7 @@ def main(argv=None):
 
     try:
         if args.command == "install":
-            install_cli(env, args.bin_dir)
+            install_cli(args.bin_dir)
             return 0
 
         ignore_file = resolve_global_ignore_file(env) if args.global_scope else resolve_local_ignore_file(cwd, env)
