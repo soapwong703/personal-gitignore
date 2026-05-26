@@ -88,8 +88,8 @@ def install_cli(bin_dir=None):
 
     source_dir = Path(__file__).resolve().parent
     entries = {
-        "personal-gitignore": source_dir / "personal-gitignore",
         "pgi": source_dir / "pgi",
+        "personal-gitignore": source_dir / "personal-gitignore",
     }
 
     installed = []
@@ -104,6 +104,8 @@ def install_cli(bin_dir=None):
 
     for path in installed:
         print(path)
+        if path.name == "pgi":
+            print("Use `pgi` as the default command.")
 
 
 def parse_args(argv):

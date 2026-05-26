@@ -12,10 +12,10 @@ Both inline mode and editor mode operate on the same underlying file for the sel
 ## Usage
 
 ```bash
-./personal-gitignore [--local|--global] <command> [pattern]
-# alias
 ./pgi [--local|--global] <command> [pattern]
 ```
+
+`pgi` is the default command. `personal-gitignore` is still available for compatibility.
 
 Install directly from GitHub in one line:
 
@@ -33,7 +33,7 @@ curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main
 Commands:
 
 - `setup` – ensure the file exists and print its path
-- `install` – install `personal-gitignore` and `pgi` to `~/.local/bin` (or `--bin-dir`)
+- `install` – install `pgi` (default command) and `personal-gitignore` compatibility wrapper to `~/.local/bin` (or `--bin-dir`)
 - `list` – show current rules
 - `add <pattern>` – add a rule
 - `remove <pattern>` – remove a rule
@@ -43,11 +43,11 @@ Commands:
 Examples:
 
 ```bash
-./personal-gitignore install
+./pgi install
 export PATH="$HOME/.local/bin:$PATH"
 
-./personal-gitignore add .env.local
-./personal-gitignore remove .env.local
-./personal-gitignore --global add *.machine
-./personal-gitignore edit
+./pgi add .env.local
+./pgi remove .env.local
+./pgi --global add *.machine
+./pgi edit
 ```

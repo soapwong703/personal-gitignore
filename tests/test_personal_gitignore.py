@@ -125,6 +125,7 @@ class PersonalGitignoreCliTests(unittest.TestCase):
 
             install = self.run_cli(["install"], cwd=home, env=env)
             self.assertEqual(install.returncode, 0, install.stderr)
+            self.assertIn("Use `pgi` as the default command.", install.stdout)
 
             installed_cli = home / ".local" / "bin" / "personal-gitignore"
             installed_alias = home / ".local" / "bin" / "pgi"
@@ -185,6 +186,7 @@ class PersonalGitignoreCliTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(install.returncode, 0, install.stderr)
+            self.assertIn("Use `pgi` as the default command.", install.stdout)
 
             installed_cli = bin_dir / "personal-gitignore"
             installed_alias = bin_dir / "pgi"
