@@ -13,6 +13,8 @@ Both inline mode and editor mode operate on the same underlying file for the sel
 
 ```bash
 ./personal-gitignore [--local|--global] <command> [pattern]
+# alias
+./pgi [--local|--global] <command> [pattern]
 ```
 
 Commands:

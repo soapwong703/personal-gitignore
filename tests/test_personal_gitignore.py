@@ -7,6 +7,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CLI = REPO_ROOT / "personal-gitignore"
+ALIAS = REPO_ROOT / "pgi"
 
 
 class PersonalGitignoreCliTests(unittest.TestCase):
@@ -91,6 +92,24 @@ class PersonalGitignoreCliTests(unittest.TestCase):
 
             listed = self.run_cli(["list"], cwd=repo)
             self.assertIn("from-editor", listed.stdout)
+
+    def test_pgi_alias_invokes_same_cli(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            repo.mkdir()
+            subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+
+            add = subprocess.run(
+                [str(ALIAS), "add", "*.alias"],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(add.returncode, 0, add.stderr)
+
+            listed = self.run_cli(["list"], cwd=repo)
+            self.assertIn("*.alias", listed.stdout)
 
 
 if __name__ == "__main__":
