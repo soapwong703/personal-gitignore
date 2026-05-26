@@ -48,10 +48,10 @@ download() {
 download "${BASE_URL}/personal-gitignore" "${TMP_DIR}/personal-gitignore"
 download "${BASE_URL}/pgi" "${TMP_DIR}/pgi"
 
-chmod u+x "${TMP_DIR}/personal-gitignore" "${TMP_DIR}/pgi"
 cp "${TMP_DIR}/personal-gitignore" "${BIN_DIR}/personal-gitignore"
 cp "${TMP_DIR}/pgi" "${BIN_DIR}/pgi"
 chmod u+x "${BIN_DIR}/personal-gitignore" "${BIN_DIR}/pgi"
 
+echo "Successfully installed:"
 echo "${BIN_DIR}/personal-gitignore"
 echo "${BIN_DIR}/pgi"
