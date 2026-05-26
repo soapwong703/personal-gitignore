@@ -12,11 +12,11 @@ Both inline mode and editor mode operate on the same underlying file for the sel
 ## Usage
 
 ```bash
-./pgi [--local|--global] <command> [pattern]
+pgi [--local|--global] <command> [pattern]
 ```
 
 `pgi` is the default command. `personal-gitignore` is still available for compatibility.
-Running `./pgi` directly from this repository requires Go (uses `go run`).
+Running `./pgi` directly from this repository uses `go run`, so Go is required.
 
 Install directly from GitHub in one line:
 
@@ -45,10 +45,10 @@ Commands:
 Examples:
 
 ```bash
-./pgi add .env.local
-./pgi remove .env.local
-./pgi --global add *.machine
-./pgi edit
+pgi add .env.local
+pgi remove .env.local
+pgi --global add '*.machine'
+pgi edit
 ```
 
 ## GitHub Release Build

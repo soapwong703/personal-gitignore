@@ -192,7 +192,16 @@ func expandHome(path string) (string, error) {
 		}
 		return filepath.Join(home, path[2:]), nil
 	}
-	return os.ExpandEnv(path), nil
+	expanded := os.ExpandEnv(path)
+	if filepath.IsAbs(expanded) {
+		return expanded, nil
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, expanded), nil
 }
 
 func main() {

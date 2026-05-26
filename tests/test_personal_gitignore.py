@@ -73,6 +73,35 @@ class PersonalGitignoreCliTests(unittest.TestCase):
             )
             self.assertEqual(configured.stdout.strip(), str(expected_ignore))
 
+    def test_global_scope_respects_home_relative_excludesfile(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            home.mkdir()
+            config = Path(tmp) / "global.gitconfig"
+
+            env = os.environ.copy()
+            env["HOME"] = str(home)
+            env["GIT_CONFIG_GLOBAL"] = str(config)
+
+            subprocess.run(
+                ["git", "config", "--global", "core.excludesfile", "relative.ignore"],
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            repo = Path(tmp) / "repo"
+            repo.mkdir()
+            subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+
+            result = self.run_cli(["--global", "add", "*.machine"], cwd=repo, env=env)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            expected_ignore = home / "relative.ignore"
+            self.assertTrue(expected_ignore.exists())
+            self.assertIn("*.machine", expected_ignore.read_text(encoding="utf-8"))
+
     def test_edit_mode_modifies_same_underlying_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp) / "repo"
