@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -79,6 +80,37 @@ func runBin(t *testing.T, bin string, cwd string, env map[string]string, args ..
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	return stdout.String(), stderr.String(), err
+}
+
+func buildEditorHelper(t *testing.T, dir string) string {
+	t.Helper()
+	source := filepath.Join(dir, "editor-helper.go")
+	program := `package main
+
+import "os"
+
+func main() {
+	if len(os.Args) != 3 {
+		os.Exit(2)
+	}
+	if os.Args[1] != "--write" {
+		os.Exit(3)
+	}
+	if err := os.WriteFile(os.Args[2], []byte("from-editor\n"), 0o644); err != nil {
+		os.Exit(4)
+	}
+}
+`
+	if err := os.WriteFile(source, []byte(program), 0o644); err != nil {
+		t.Fatalf("write editor source: %v", err)
+	}
+
+	bin := filepath.Join(dir, "editor-helper")
+	cmd := exec.Command("go", "build", "-o", bin, source)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("build editor helper: %v\n%s", err, string(out))
+	}
+	return bin
 }
 
 func TestLocalInlineCRUDAutoInitializesGitInfoExclude(t *testing.T) {
@@ -256,18 +288,33 @@ func TestEditModeModifiesSameUnderlyingFile(t *testing.T) {
 		t.Fatalf("git init: %v, %s", err, string(out))
 	}
 
-	// create an editor helper script that writes a line
-	editor := filepath.Join(tmpRepo, "editor.sh")
-	if err := os.WriteFile(editor, []byte("#!/usr/bin/env sh\necho from-editor > \"$1\"\n"), 0o755); err != nil {
-		t.Fatalf("write editor: %v", err)
+	editorDir := filepath.Join(tmpRepo, "editor tools")
+	if err := os.MkdirAll(editorDir, 0o755); err != nil {
+		t.Fatalf("mkdir editor dir: %v", err)
+	}
+	editor := buildEditorHelper(t, editorDir)
+
+	realGit, err := exec.LookPath("git")
+	if err != nil {
+		t.Fatalf("lookpath git: %v", err)
+	}
+	gitDir := filepath.Join(tmpRepo, "git-bin")
+	if err := os.MkdirAll(gitDir, 0o755); err != nil {
+		t.Fatalf("mkdir git dir: %v", err)
+	}
+	if err := os.Symlink(realGit, filepath.Join(gitDir, "git")); err != nil {
+		t.Fatalf("symlink git: %v", err)
 	}
 
-	env := map[string]string{"EDITOR": editor}
+	env := map[string]string{
+		"PATH":   gitDir,
+		"EDITOR": fmt.Sprintf("\"%s\" --write", editor),
+	}
 	if _, stderr, err := runBin(t, bin, tmpRepo, env, "edit"); err != nil {
 		t.Fatalf("edit failed: %v, %s", err, stderr)
 	}
 
-	out, _, err := runBin(t, bin, tmpRepo, nil, "list")
+	out, _, err := runBin(t, bin, tmpRepo, map[string]string{"PATH": gitDir}, "list")
 	if err != nil {
 		t.Fatalf("list failed: %v", err)
 	}

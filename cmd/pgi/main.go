@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
 type options struct {
@@ -137,6 +138,88 @@ func writePatterns(path string, patterns []string) error {
 	return os.WriteFile(path, []byte(content), 0o644)
 }
 
+func splitCommand(command string) ([]string, error) {
+	parts := []string{}
+	var current strings.Builder
+	inSingle := false
+	inDouble := false
+	runes := []rune(command)
+
+	for i := 0; i < len(runes); i++ {
+		ch := runes[i]
+
+		if inSingle {
+			if ch == '\'' {
+				inSingle = false
+				continue
+			}
+			current.WriteRune(ch)
+			continue
+		}
+
+		if inDouble {
+			switch ch {
+			case '"':
+				inDouble = false
+			case '\\':
+				if i+1 < len(runes) {
+					next := runes[i+1]
+					if next == '"' || next == '\\' || next == '$' || next == '`' || next == '\n' {
+						current.WriteRune(next)
+						i++
+						continue
+					}
+				}
+				current.WriteRune(ch)
+			default:
+				current.WriteRune(ch)
+			}
+			continue
+		}
+
+		if unicode.IsSpace(ch) {
+			if current.Len() > 0 {
+				parts = append(parts, current.String())
+				current.Reset()
+			}
+			continue
+		}
+
+		switch ch {
+		case '\'':
+			inSingle = true
+		case '"':
+			inDouble = true
+		case '\\':
+			if i+1 < len(runes) {
+				next := runes[i+1]
+				if unicode.IsSpace(next) || next == '\\' || next == '\'' || next == '"' {
+					current.WriteRune(next)
+					i++
+					continue
+				}
+			}
+			current.WriteRune(ch)
+		default:
+			current.WriteRune(ch)
+		}
+	}
+
+	if inSingle || inDouble {
+		return nil, errors.New("unterminated quoted editor command")
+	}
+
+	if current.Len() > 0 {
+		parts = append(parts, current.String())
+	}
+
+	if len(parts) == 0 {
+		return nil, errors.New("empty editor command")
+	}
+
+	return parts, nil
+}
+
 func openEditor(path string, env []string) error {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
@@ -152,8 +235,13 @@ func openEditor(path string, env []string) error {
 	if editor == "" {
 		return errors.New("No editor found. Set EDITOR or VISUAL.")
 	}
+	editor = strings.TrimSpace(editor)
+	parts, err := splitCommand(editor)
+	if err != nil {
+		return err
+	}
 
-	cmd := exec.Command("sh", "-c", editor+" \"$1\"", "sh", path)
+	cmd := exec.Command(parts[0], append(parts[1:], path)...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
