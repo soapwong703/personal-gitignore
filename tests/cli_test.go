@@ -54,7 +54,7 @@ func TestHelpOutputShowsUsageAndExamples(t *testing.T) {
 	if stderr != "" {
 		t.Fatalf("expected no stderr, got: %s", stderr)
 	}
-	if !strings.Contains(stdout, "pgi [--global] [--help] <command> [pattern]") {
+	if !strings.Contains(stdout, "pgi [--global] [--help] <command> [pattern ...]") {
 		t.Fatalf("usage line missing from help output: %s", stdout)
 	}
 	if !strings.Contains(stdout, "Examples:") {
@@ -65,6 +65,36 @@ func TestHelpOutputShowsUsageAndExamples(t *testing.T) {
 	}
 	if !strings.Contains(stdout, "pgi --global add \"*.env\"") {
 		t.Fatalf("example missing from help output: %s", stdout)
+	}
+}
+
+func TestAddAndRemoveSupportHelp(t *testing.T) {
+	bin := buildCLI(t)
+
+	tests := []struct {
+		name    string
+		command string
+	}{
+		{name: "add", command: "add"},
+		{name: "remove", command: "remove"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			stdout, stderr, err := runBin(t, bin, t.TempDir(), nil, tc.command, "--help")
+			if err != nil {
+				t.Fatalf("%s --help failed: %v, %s", tc.command, err, stderr)
+			}
+			if stderr != "" {
+				t.Fatalf("expected no stderr for %s --help, got: %s", tc.command, stderr)
+			}
+			if !strings.Contains(stdout, "Usage:") {
+				t.Fatalf("expected usage in %s --help output: %s", tc.command, stdout)
+			}
+			if !strings.Contains(stdout, tc.command) {
+				t.Fatalf("expected command name in %s --help output: %s", tc.command, stdout)
+			}
+		})
 	}
 }
 
@@ -177,8 +207,8 @@ func TestAddPatternStartingWithDash(t *testing.T) {
 		t.Fatalf("git init: %v, %s", err, string(out))
 	}
 
-	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "add", "--cache"); err != nil {
-		t.Fatalf("add --cache failed: %v, %s", err, stderr)
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "add", "--", "--cache"); err != nil {
+		t.Fatalf("add -- --cache failed: %v, %s", err, stderr)
 	}
 
 	out, _, err := runBin(t, bin, tmpRepo, nil, "list")
@@ -203,12 +233,12 @@ func TestRemovePatternStartingWithDash(t *testing.T) {
 		t.Fatalf("git init: %v, %s", err, string(out))
 	}
 
-	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "add", "--cache"); err != nil {
-		t.Fatalf("add --cache failed: %v, %s", err, stderr)
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "add", "--", "--cache"); err != nil {
+		t.Fatalf("add -- --cache failed: %v, %s", err, stderr)
 	}
 
-	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "remove", "--cache"); err != nil {
-		t.Fatalf("remove --cache failed: %v, %s", err, stderr)
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "remove", "--", "--cache"); err != nil {
+		t.Fatalf("remove -- --cache failed: %v, %s", err, stderr)
 	}
 
 	out, _, err := runBin(t, bin, tmpRepo, nil, "list")

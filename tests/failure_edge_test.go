@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-// TestAddTooManyArgs verifies the CLI rejects too many positional args for add.
-func TestAddTooManyArgs(t *testing.T) {
+// TestAddAcceptsMultipleArgs verifies add can ingest multiple positional patterns in one command.
+func TestAddAcceptsMultipleArgs(t *testing.T) {
 	bin := buildCLI(t)
 
 	tmpRepo, err := os.MkdirTemp("", "repo-")
@@ -23,12 +23,61 @@ func TestAddTooManyArgs(t *testing.T) {
 		t.Fatalf("git init: %v, %s", err, string(out))
 	}
 
-	_, stderr, err := runBin(t, bin, tmpRepo, nil, "add", "one", "two")
-	if err == nil {
-		t.Fatalf("expected error for too many args; stderr=%s", stderr)
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "add", "one", "two", "three"); err != nil {
+		t.Fatalf("add with multiple args failed: %v, %s", err, stderr)
 	}
-	if !strings.Contains(stderr, "accepts 1 arg") {
-		t.Fatalf("unexpected stderr for too many args: %s", stderr)
+
+	out, _, err := runBin(t, bin, tmpRepo, nil, "list")
+	if err != nil {
+		t.Fatalf("list failed: %v", err)
+	}
+	for _, want := range []string{"one", "two", "three"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected %q in list output: %s", want, out)
+		}
+	}
+}
+
+// TestAddAndRemoveSplitWhitespace verifies whitespace inside args is split into separate pattern entries.
+func TestAddAndRemoveSplitWhitespace(t *testing.T) {
+	bin := buildCLI(t)
+
+	tmpRepo, err := os.MkdirTemp("", "repo-")
+	if err != nil {
+		t.Fatalf("mktemp: %v", err)
+	}
+	init := exec.Command("git", "init")
+	init.Dir = tmpRepo
+	if out, err := init.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v, %s", err, string(out))
+	}
+
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "add", "alpha beta", "gamma\tdelta"); err != nil {
+		t.Fatalf("add split args failed: %v, %s", err, stderr)
+	}
+
+	out, _, err := runBin(t, bin, tmpRepo, nil, "list")
+	if err != nil {
+		t.Fatalf("list failed: %v", err)
+	}
+	for _, want := range []string{"alpha", "beta", "gamma", "delta"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected %q in list output: %s", want, out)
+		}
+	}
+
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "remove", "alpha beta", "gamma", "delta"); err != nil {
+		t.Fatalf("remove split args failed: %v, %s", err, stderr)
+	}
+
+	out, _, err = runBin(t, bin, tmpRepo, nil, "list")
+	if err != nil {
+		t.Fatalf("list failed: %v", err)
+	}
+	for _, removed := range []string{"alpha", "beta", "gamma", "delta"} {
+		if strings.Contains(out, removed) {
+			t.Fatalf("did not expect %q after remove, got: %s", removed, out)
+		}
 	}
 }
 

@@ -186,6 +186,14 @@ func filterPatternsByGlob(patterns []string, glob string) ([]string, error) {
 	return filtered, nil
 }
 
+func expandPatternArgs(args []string) []string {
+	patterns := make([]string, 0, len(args))
+	for _, arg := range args {
+		patterns = append(patterns, strings.Fields(arg)...)
+	}
+	return patterns
+}
+
 func splitCommand(command string) ([]string, error) {
 	parts := []string{}
 	var current strings.Builder

@@ -30,15 +30,15 @@ Re-run the installer for your platform. It downloads the latest release and repl
 ## Usage
 
 ```bash
-pgi [--global] [--help] <command> [pattern]
+pgi [--global] [--help] <command> [pattern ...]
 ```
 
 Commands:
 
 - `list [glob]` - show the current ignore patterns, filtered by glob when provided
-- `add <pattern>` - add a pattern if it is not already present
-- `remove <pattern>` - remove a pattern if it exists
-- `clear` - remove all patterns
+- `add <pattern...>` - add one or more patterns if they are not already present
+- `remove <pattern...>` - remove one or more patterns if they exist
+- `clear` - remove all non-comment patterns
 - `edit` - open the ignore file in your editor
 
 The default scope is local. Use `--global` to manage the global ignore file.
@@ -53,6 +53,7 @@ pgi list
 pgi list "*.log"
 pgi add "*.log"
 pgi --global add "*.env"
+pgi remove -- --prefix
 pgi edit
 ```
 
