@@ -47,7 +47,7 @@ pgi [--local|--global] [--help] <command> [pattern]
 
 Commands:
 
-- `list` - show the current ignore patterns
+- `list [glob]` - show the current ignore patterns, skipping commented lines and filtered by glob when provided
 - `add <pattern>` - add a pattern if it is not already present
 - `remove <pattern>` - remove a pattern if it exists
 - `clear` - remove all patterns
@@ -62,6 +62,7 @@ Examples:
 ```bash
 pgi --help
 pgi list
+pgi list "*.log"
 pgi add "*.log"
 pgi --global add "*.env"
 pgi edit

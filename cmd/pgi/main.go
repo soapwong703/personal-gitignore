@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -31,7 +32,7 @@ const helpText = `Usage:
 	pgi [--local|--global] [--help] <command> [pattern]
 
 Commands:
-	list              Show the current ignore patterns
+	list [glob]       Show the current ignore patterns, filtered by glob when provided
 	add <pattern>     Add a pattern if it is not already present
 	remove <pattern>  Remove a pattern if it exists
 	clear             Remove all patterns
@@ -40,6 +41,7 @@ Commands:
 Examples:
 	pgi --help
 	pgi list
+	pgi list "*.log"
 	pgi add "*.log"
 	pgi --global add "*.env"
 	pgi edit
@@ -136,6 +138,33 @@ func writePatterns(path string, patterns []string) error {
 		content += "\n"
 	}
 	return os.WriteFile(path, []byte(content), 0o644)
+}
+
+const globSeparatorPlaceholder = "\x00"
+
+func isCommentLine(line string) bool {
+	trimmed := strings.TrimLeft(line, " \t")
+	return strings.HasPrefix(trimmed, "#")
+}
+
+func filterPatternsByGlob(patterns []string, glob string) ([]string, error) {
+	compiledGlob := strings.ReplaceAll(glob, "/", globSeparatorPlaceholder)
+	if _, err := path.Match(compiledGlob, ""); err != nil {
+		return nil, err
+	}
+
+	filtered := make([]string, 0, len(patterns))
+	for _, pattern := range patterns {
+		row := strings.ReplaceAll(pattern, "/", globSeparatorPlaceholder)
+		matched, err := path.Match(compiledGlob, row)
+		if err != nil {
+			return nil, err
+		}
+		if matched {
+			filtered = append(filtered, pattern)
+		}
+	}
+	return filtered, nil
 }
 
 func splitCommand(command string) ([]string, error) {
@@ -373,7 +402,21 @@ func main() {
 			fmt.Fprintln(os.Stderr, "Error:", err)
 			os.Exit(1)
 		}
-		for _, p := range patterns {
+		visible := make([]string, 0, len(patterns))
+		for _, pattern := range patterns {
+			if isCommentLine(pattern) {
+				continue
+			}
+			visible = append(visible, pattern)
+		}
+		if opts.pattern != "" {
+			visible, err = filterPatternsByGlob(visible, opts.pattern)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Error:", err)
+				os.Exit(1)
+			}
+		}
+		for _, p := range visible {
 			fmt.Println(p)
 		}
 		return

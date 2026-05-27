@@ -60,6 +60,9 @@ func TestHelpOutputShowsUsageAndExamples(t *testing.T) {
 	if !strings.Contains(stdout, "Examples:") {
 		t.Fatalf("examples section missing from help output: %s", stdout)
 	}
+	if !strings.Contains(stdout, "pgi list \"*.log\"") {
+		t.Fatalf("list glob example missing from help output: %s", stdout)
+	}
 	if !strings.Contains(stdout, "pgi --global add \"*.env\"") {
 		t.Fatalf("example missing from help output: %s", stdout)
 	}
@@ -184,6 +187,83 @@ func TestAddPatternStartingWithDash(t *testing.T) {
 	}
 	if !strings.Contains(out, "--cache") {
 		t.Fatalf("expected --cache in list, got: %s", out)
+	}
+}
+
+func TestListFiltersPatternsByGlob(t *testing.T) {
+	bin := buildCLI(t)
+
+	tmpRepo, err := os.MkdirTemp("", "repo-")
+	if err != nil {
+		t.Fatalf("mktemp: %v", err)
+	}
+	init := exec.Command("git", "init")
+	init.Dir = tmpRepo
+	if out, err := init.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v, %s", err, string(out))
+	}
+
+	patterns := []string{
+		"src/pkg/main.go",
+		"docs/pkg/README.md",
+		"other.txt",
+	}
+	for _, pattern := range patterns {
+		if _, stderr, err := runBin(t, bin, tmpRepo, nil, "add", pattern); err != nil {
+			t.Fatalf("add %q failed: %v, %s", pattern, err, stderr)
+		}
+	}
+
+	out, stderr, err := runBin(t, bin, tmpRepo, nil, "list", "*pkg*")
+	if err != nil {
+		t.Fatalf("list glob failed: %v, %s", err, stderr)
+	}
+
+	trimmed := strings.TrimSpace(out)
+	var lines []string
+	if trimmed != "" {
+		lines = strings.Split(trimmed, "\n")
+	}
+	want := []string{"src/pkg/main.go", "docs/pkg/README.md"}
+	if len(lines) != len(want) {
+		t.Fatalf("unexpected list output: got %v, want %v", lines, want)
+	}
+	for i, line := range lines {
+		if line != want[i] {
+			t.Fatalf("unexpected list output: got %v, want %v", lines, want)
+		}
+	}
+}
+
+func TestListIgnoresCommentedLines(t *testing.T) {
+	bin := buildCLI(t)
+
+	tmpRepo, err := os.MkdirTemp("", "repo-")
+	if err != nil {
+		t.Fatalf("mktemp: %v", err)
+	}
+	init := exec.Command("git", "init")
+	init.Dir = tmpRepo
+	if out, err := init.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v, %s", err, string(out))
+	}
+
+	excludeFile := filepath.Join(tmpRepo, ".git", "info", "exclude")
+	content := "# comment one\n*.log\n  # indented comment\nsrc/pkg/main.go\n"
+	if err := os.WriteFile(excludeFile, []byte(content), 0o644); err != nil {
+		t.Fatalf("write exclude: %v", err)
+	}
+
+	out, stderr, err := runBin(t, bin, tmpRepo, nil, "list")
+	if err != nil {
+		t.Fatalf("list failed: %v, %s", err, stderr)
+	}
+
+	if strings.Contains(out, "# comment one") || strings.Contains(out, "# indented comment") {
+		t.Fatalf("commented lines should not be listed: %s", out)
+	}
+	if !strings.Contains(out, "*.log") || !strings.Contains(out, "src/pkg/main.go") {
+		t.Fatalf("expected patterns missing from list output: %s", out)
 	}
 }
 
