@@ -1,7 +1,8 @@
-package main
+package cmd
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -10,44 +11,47 @@ import (
 	"path/filepath"
 	"strings"
 	"unicode"
+
+	"github.com/spf13/cobra"
 )
 
-type options struct {
-	local       bool
-	globalScope bool
-	help        bool
-	command     string
-	pattern     string
+type commandContext struct {
+	env []string
+	cwd string
 }
 
-var validCommands = map[string]struct{}{
-	"list":   {},
-	"add":    {},
-	"remove": {},
-	"clear":  {},
-	"edit":   {},
+type runtimeState struct {
+	ctx        commandContext
+	ignoreFile string
 }
 
-const helpText = `Usage:
-	pgi [--local|--global] [--help] <command> [pattern]
+type runtimeStateKey struct{}
 
-Commands:
-	list [glob]       Show the current ignore patterns, filtered by glob when provided
-	add <pattern>     Add a pattern if it is not already present
-	remove <pattern>  Remove a pattern if it exists
-	clear             Remove all patterns
-	edit              Open the ignore file in your editor
+func prepareRuntimeState(cmd *cobra.Command, _ []string) error {
+	ctx, err := buildCommandContext()
+	if err != nil {
+		return err
+	}
+	ignoreFile, err := resolveIgnoreFile(ctx)
+	if err != nil {
+		return err
+	}
+	if err := ensureFile(ignoreFile); err != nil {
+		return err
+	}
 
-Examples:
-	pgi --help
-	pgi list
-	pgi list "*.log"
-	pgi add "*.log"
-	pgi --global add "*.env"
-	pgi edit
+	state := runtimeState{ctx: ctx, ignoreFile: ignoreFile}
+	cmd.SetContext(context.WithValue(cmd.Context(), runtimeStateKey{}, state))
+	return nil
+}
 
-The default scope is local. Use --global to manage the global ignore file.
-`
+func getRuntimeState(cmd *cobra.Command) (runtimeState, error) {
+	state, ok := cmd.Context().Value(runtimeStateKey{}).(runtimeState)
+	if !ok {
+		return runtimeState{}, errors.New("internal error: command context not prepared")
+	}
+	return state, nil
+}
 
 func runGit(args []string, cwd string, env []string) (string, error) {
 	cmd := exec.Command("git", args...)
@@ -98,6 +102,21 @@ func resolveGlobalIgnoreFile(env []string) (string, error) {
 		return "", err
 	}
 	return defaultPath, nil
+}
+
+func resolveIgnoreFile(ctx commandContext) (string, error) {
+	if flagGlobal {
+		return resolveGlobalIgnoreFile(ctx.env)
+	}
+	return resolveLocalIgnoreFile(ctx.cwd, ctx.env)
+}
+
+func buildCommandContext() (commandContext, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return commandContext{}, err
+	}
+	return commandContext{env: os.Environ(), cwd: cwd}, nil
 }
 
 func ensureFile(path string) error {
@@ -165,6 +184,14 @@ func filterPatternsByGlob(patterns []string, glob string) ([]string, error) {
 		}
 	}
 	return filtered, nil
+}
+
+func expandPatternArgs(args []string) []string {
+	patterns := make([]string, 0, len(args))
+	for _, arg := range args {
+		patterns = append(patterns, strings.Fields(arg)...)
+	}
+	return patterns
 }
 
 func splitCommand(command string) ([]string, error) {
@@ -283,67 +310,18 @@ func openEditor(path string, env []string) error {
 	return nil
 }
 
-func parseArgs(args []string) (options, error) {
-	opts := options{}
-	positionals := []string{}
-	commandSeen := false
-
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-		if !commandSeen {
-			switch arg {
-			case "--local":
-				opts.local = true
-			case "--global":
-				opts.globalScope = true
-			case "--help":
-				opts.help = true
-			default:
-				if strings.HasPrefix(arg, "--") {
-					return options{}, fmt.Errorf("unknown argument: %s", arg)
-				}
-				commandSeen = true
-				positionals = append(positionals, arg)
-			}
-			continue
-		}
-		positionals = append(positionals, arg)
-	}
-
-	if opts.help {
-		return opts, nil
-	}
-	if opts.local && opts.globalScope {
-		return options{}, errors.New("--local and --global cannot be used together")
-	}
-	if len(positionals) == 0 {
-		return options{}, errors.New("missing command")
-	}
-	opts.command = positionals[0]
-	if _, ok := validCommands[opts.command]; !ok {
-		return options{}, fmt.Errorf("invalid command: %s", opts.command)
-	}
-	if len(positionals) > 1 {
-		opts.pattern = positionals[1]
-	}
-	if len(positionals) > 2 {
-		return options{}, errors.New("too many arguments")
-	}
-	return opts, nil
-}
-
-func expandHome(path string) (string, error) {
-	if path == "~" || strings.HasPrefix(path, "~/") {
+func expandHome(pathStr string) (string, error) {
+	if pathStr == "~" || strings.HasPrefix(pathStr, "~/") {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return "", err
 		}
-		if path == "~" {
+		if pathStr == "~" {
 			return home, nil
 		}
-		return filepath.Join(home, path[2:]), nil
+		return filepath.Join(home, pathStr[2:]), nil
 	}
-	expanded := os.ExpandEnv(path)
+	expanded := os.ExpandEnv(pathStr)
 	if filepath.IsAbs(expanded) {
 		return expanded, nil
 	}
@@ -353,113 +331,4 @@ func expandHome(path string) (string, error) {
 		return "", err
 	}
 	return filepath.Join(home, expanded), nil
-}
-
-func main() {
-	opts, err := parseArgs(os.Args[1:])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
-	}
-	if opts.help {
-		fmt.Print(helpText)
-		return
-	}
-
-	env := os.Environ()
-	cwd, err := os.Getwd()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
-	}
-
-	var ignoreFile string
-	if opts.globalScope {
-		ignoreFile, err = resolveGlobalIgnoreFile(env)
-	} else {
-		ignoreFile, err = resolveLocalIgnoreFile(cwd, env)
-	}
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
-	}
-
-	if err := ensureFile(ignoreFile); err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
-	}
-
-	switch opts.command {
-	case "edit":
-		if err := openEditor(ignoreFile, env); err != nil {
-			fmt.Fprintln(os.Stderr, "Error:", err)
-			os.Exit(1)
-		}
-		return
-	case "list":
-		patterns, err := readPatterns(ignoreFile)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error:", err)
-			os.Exit(1)
-		}
-		visible := make([]string, 0, len(patterns))
-		for _, pattern := range patterns {
-			if isCommentLine(pattern) {
-				continue
-			}
-			visible = append(visible, pattern)
-		}
-		if opts.pattern != "" {
-			visible, err = filterPatternsByGlob(visible, opts.pattern)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "Error:", err)
-				os.Exit(1)
-			}
-		}
-		for _, p := range visible {
-			fmt.Println(p)
-		}
-		return
-	case "add", "remove":
-		if opts.pattern == "" {
-			fmt.Fprintf(os.Stderr, "Error: '%s' requires a pattern\n", opts.command)
-			os.Exit(1)
-		}
-	}
-
-	patterns, err := readPatterns(ignoreFile)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
-	}
-
-	switch opts.command {
-	case "add":
-		for _, p := range patterns {
-			if p == opts.pattern {
-				return
-			}
-		}
-		patterns = append(patterns, opts.pattern)
-		if err := writePatterns(ignoreFile, patterns); err != nil {
-			fmt.Fprintln(os.Stderr, "Error:", err)
-			os.Exit(1)
-		}
-	case "remove":
-		updated := make([]string, 0, len(patterns))
-		for _, p := range patterns {
-			if p != opts.pattern {
-				updated = append(updated, p)
-			}
-		}
-		if err := writePatterns(ignoreFile, updated); err != nil {
-			fmt.Fprintln(os.Stderr, "Error:", err)
-			os.Exit(1)
-		}
-	case "clear":
-		if err := writePatterns(ignoreFile, []string{}); err != nil {
-			fmt.Fprintln(os.Stderr, "Error:", err)
-			os.Exit(1)
-		}
-	}
 }
