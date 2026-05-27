@@ -17,7 +17,7 @@ macOS and Linux:
 curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
 ```
 
-Windows PowerShell / PowerShell 7+:
+Windows:
 
 ```powershell
 irm https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.ps1 | iex
