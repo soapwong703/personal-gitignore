@@ -8,19 +8,13 @@ var editCmd = &cobra.Command{
 	Long:    "Open the selected ignore file in the editor configured by $EDITOR, $VISUAL, or git var GIT_EDITOR.",
 	Example: "pgi edit",
 	Args:    cobra.NoArgs,
+	PreRunE: prepareRuntimeState,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx, err := buildCommandContext()
+		state, err := getRuntimeState(cmd)
 		if err != nil {
 			return err
 		}
-		ignoreFile, err := resolveIgnoreFile(ctx)
-		if err != nil {
-			return err
-		}
-		if err := ensureFile(ignoreFile); err != nil {
-			return err
-		}
-		return openEditor(ignoreFile, ctx.env)
+		return openEditor(state.ignoreFile, state.ctx.env)
 	},
 }
 

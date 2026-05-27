@@ -30,7 +30,7 @@ Re-run the installer for your platform. It downloads the latest release and repl
 ## Usage
 
 ```bash
-pgi [--local|--global] [--help] <command> [pattern]
+pgi [--global] [--help] <command> [pattern]
 ```
 
 Commands:

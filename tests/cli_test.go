@@ -36,7 +36,7 @@ func buildCLI(t *testing.T) string {
 		t.Fatalf("mktemp: %v", err)
 	}
 	bin := filepath.Join(tmp, "pgi")
-	cmd := exec.Command("go", "build", "-trimpath", "-ldflags=-s -w", "-o", bin, "./cmd/pgi")
+	cmd := exec.Command("go", "build", "-trimpath", "-ldflags=-s -w", "-o", bin, ".")
 	cmd.Dir = repo
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -54,7 +54,7 @@ func TestHelpOutputShowsUsageAndExamples(t *testing.T) {
 	if stderr != "" {
 		t.Fatalf("expected no stderr, got: %s", stderr)
 	}
-	if !strings.Contains(stdout, "pgi [--local|--global] [--help] <command> [pattern]") {
+	if !strings.Contains(stdout, "pgi [--global] [--help] <command> [pattern]") {
 		t.Fatalf("usage line missing from help output: %s", stdout)
 	}
 	if !strings.Contains(stdout, "Examples:") {

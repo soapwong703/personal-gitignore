@@ -3,24 +3,19 @@ package cmd
 import "github.com/spf13/cobra"
 
 var addCmd = &cobra.Command{
-	Use:     "add <pattern>",
-	Short:   "Add a pattern",
-	Long:    "Append a pattern to the selected ignore file if it is not already present.",
-	Example: "pgi add \"*.log\"",
-	Args:    cobra.ExactArgs(1),
+	Use:                "add <pattern>",
+	Short:              "Add a pattern",
+	Long:               "Append a pattern to the selected ignore file if it is not already present.",
+	Example:            "pgi add \"*.log\"",
+	Args:               cobra.ExactArgs(1),
+	DisableFlagParsing: true,
+	PreRunE:            prepareRuntimeState,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx, err := buildCommandContext()
+		state, err := getRuntimeState(cmd)
 		if err != nil {
 			return err
 		}
-		ignoreFile, err := resolveIgnoreFile(ctx)
-		if err != nil {
-			return err
-		}
-		if err := ensureFile(ignoreFile); err != nil {
-			return err
-		}
-		patterns, err := readPatterns(ignoreFile)
+		patterns, err := readPatterns(state.ignoreFile)
 		if err != nil {
 			return err
 		}
@@ -30,7 +25,7 @@ var addCmd = &cobra.Command{
 			}
 		}
 		patterns = append(patterns, args[0])
-		return writePatterns(ignoreFile, patterns)
+		return writePatterns(state.ignoreFile, patterns)
 	},
 }
 

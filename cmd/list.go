@@ -12,19 +12,13 @@ var listCmd = &cobra.Command{
 	Long:    "List patterns in the selected ignore file, optionally filtered by a glob.",
 	Example: "pgi list \"*.log\"",
 	Args:    cobra.MaximumNArgs(1),
+	PreRunE: prepareRuntimeState,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx, err := buildCommandContext()
+		state, err := getRuntimeState(cmd)
 		if err != nil {
 			return err
 		}
-		ignoreFile, err := resolveIgnoreFile(ctx)
-		if err != nil {
-			return err
-		}
-		if err := ensureFile(ignoreFile); err != nil {
-			return err
-		}
-		patterns, err := readPatterns(ignoreFile)
+		patterns, err := readPatterns(state.ignoreFile)
 		if err != nil {
 			return err
 		}

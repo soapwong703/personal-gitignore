@@ -8,19 +8,13 @@ var clearCmd = &cobra.Command{
 	Long:    "Remove all non-comment patterns from the selected ignore file.",
 	Example: "pgi clear",
 	Args:    cobra.NoArgs,
+	PreRunE: prepareRuntimeState,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx, err := buildCommandContext()
+		state, err := getRuntimeState(cmd)
 		if err != nil {
 			return err
 		}
-		ignoreFile, err := resolveIgnoreFile(ctx)
-		if err != nil {
-			return err
-		}
-		if err := ensureFile(ignoreFile); err != nil {
-			return err
-		}
-		return writePatterns(ignoreFile, []string{})
+		return writePatterns(state.ignoreFile, []string{})
 	},
 }
 

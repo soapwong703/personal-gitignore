@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -10,11 +11,46 @@ import (
 	"path/filepath"
 	"strings"
 	"unicode"
+
+	"github.com/spf13/cobra"
 )
 
 type commandContext struct {
 	env []string
 	cwd string
+}
+
+type runtimeState struct {
+	ctx        commandContext
+	ignoreFile string
+}
+
+type runtimeStateKey struct{}
+
+func prepareRuntimeState(cmd *cobra.Command, _ []string) error {
+	ctx, err := buildCommandContext()
+	if err != nil {
+		return err
+	}
+	ignoreFile, err := resolveIgnoreFile(ctx)
+	if err != nil {
+		return err
+	}
+	if err := ensureFile(ignoreFile); err != nil {
+		return err
+	}
+
+	state := runtimeState{ctx: ctx, ignoreFile: ignoreFile}
+	cmd.SetContext(context.WithValue(cmd.Context(), runtimeStateKey{}, state))
+	return nil
+}
+
+func getRuntimeState(cmd *cobra.Command) (runtimeState, error) {
+	state, ok := cmd.Context().Value(runtimeStateKey{}).(runtimeState)
+	if !ok {
+		return runtimeState{}, errors.New("internal error: command context not prepared")
+	}
+	return state, nil
 }
 
 func runGit(args []string, cwd string, env []string) (string, error) {
