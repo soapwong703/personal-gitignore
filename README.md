@@ -42,24 +42,27 @@ Remove-Item -Force "$HOME\.local\bin\pgi.exe"
 ## Usage
 
 ```bash
-pgi [--local|--global] <command> [pattern]
+pgi [--local|--global] [--help] <command> [pattern]
 ```
 
 Commands:
 
-- `list` – show current rules
-- `add <pattern>` – add a rule
-- `remove <pattern>` – remove a rule
-- `clear` – remove all rules
-- `edit` – open the selected file in your editor (`$EDITOR`/`$VISUAL`)
+- `list` - show the current ignore patterns
+- `add <pattern>` - add a pattern if it is not already present
+- `remove <pattern>` - remove a pattern if it exists
+- `clear` - remove all patterns
+- `edit` - open the ignore file in your editor
+
+The default scope is local. Use `--global` to manage the global ignore file.
 
 The target file is created automatically the first time you run a command.
 
 Examples:
 
 ```bash
-pgi add .env.local
-pgi remove .env.local
-pgi --global add '*.machine'
+pgi --help
+pgi list
+pgi add "*.log"
+pgi --global add "*.env"
 pgi edit
 ```
