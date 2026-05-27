@@ -1,4 +1,4 @@
-module github.com/soapwong703/personal-gitignore
+module github.com/soapwong703/pgi
 
 go 1.24
 
