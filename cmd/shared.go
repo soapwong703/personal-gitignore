@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"unicode"
 
@@ -276,23 +277,65 @@ func splitCommand(command string) ([]string, error) {
 	return parts, nil
 }
 
-func openEditor(path string, env []string) error {
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		editor = os.Getenv("VISUAL")
-	}
-	if editor == "" {
-		var err error
-		editor, err = runGit([]string{"var", "GIT_EDITOR"}, "", env)
-		if err != nil {
-			editor = ""
+func envValue(env []string, key string) string {
+	prefix := key + "="
+	for _, entry := range env {
+		if strings.HasPrefix(entry, prefix) {
+			return strings.TrimPrefix(entry, prefix)
 		}
 	}
-	if editor == "" {
-		return errors.New("No editor found. Set EDITOR or VISUAL.")
+	return ""
+}
+
+func chooseEditorCommand(env []string, gitVar func() (string, error)) (string, string, error) {
+	if editor := strings.TrimSpace(envValue(env, "EDITOR")); editor != "" {
+		return editor, "EDITOR", nil
 	}
-	editor = strings.TrimSpace(editor)
+	if editor := strings.TrimSpace(envValue(env, "VISUAL")); editor != "" {
+		return editor, "VISUAL", nil
+	}
+	editor, err := gitVar()
+	if err == nil {
+		editor = strings.TrimSpace(editor)
+		if editor != "" {
+			return editor, "GIT_EDITOR", nil
+		}
+	}
+	return "", "", errors.New("No editor found. Set EDITOR or VISUAL.")
+}
+
+func isViLikeCommand(cmd string) bool {
+	base := strings.ToLower(filepath.Base(cmd))
+	return base == "vi" || base == "vim" || base == "nvim"
+}
+
+func resolveEditorParts(editor string, source string, goos string, lookPath func(string) (string, error)) ([]string, error) {
 	parts, err := splitCommand(editor)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := lookPath(parts[0]); err != nil {
+		if goos == "windows" && source == "GIT_EDITOR" && isViLikeCommand(parts[0]) {
+			if _, fallbackErr := lookPath("notepad"); fallbackErr == nil {
+				return []string{"notepad"}, nil
+			}
+		}
+		return nil, err
+	}
+
+	return parts, nil
+}
+
+func openEditor(path string, env []string) error {
+	editor, source, err := chooseEditorCommand(env, func() (string, error) {
+		return runGit([]string{"var", "GIT_EDITOR"}, "", env)
+	})
+	if err != nil {
+		return err
+	}
+
+	parts, err := resolveEditorParts(editor, source, runtime.GOOS, exec.LookPath)
 	if err != nil {
 		return err
 	}
