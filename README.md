@@ -1,13 +1,13 @@
 # personal-gitignore
 
-A command line tool to manage personal gitignore rules that never get committed.
+Manage personal gitignore rules from the command line without committing them to your repos.
 
 ## What it manages
 
-- **Local (default):** `.git/info/exclude` in the current repository.
-- **Global:** the file configured by `git config --global core.excludesfile` (defaults to `~/.gitignore_global`).
+- **Local, default:** `.git/info/exclude` in the current repository.
+- **Global:** the file configured by `git config --global core.excludesfile`, which defaults to `~/.gitignore_global`.
 
-Both inline mode and editor mode operate on the same underlying file for the selected scope.
+All commands target the selected scope, whether you manage it from the command line or open it in your editor.
 
 ## Install
 
@@ -25,7 +25,7 @@ irm https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/instal
 
 ## Update
 
-Re-run the same installer for your platform. It downloads the latest release and replaces the existing `pgi` binary.
+Re-run the installer for your platform. It downloads the latest release and replaces the installed `pgi` binary.
 
 macOS and Linux:
 
@@ -47,7 +47,7 @@ pgi [--local|--global] [--help] <command> [pattern]
 
 Commands:
 
-- `list [glob]` - show the current ignore patterns, skipping commented lines and filtered by glob when provided
+- `list [glob]` - show the current ignore patterns, filtered by glob when provided
 - `add <pattern>` - add a pattern if it is not already present
 - `remove <pattern>` - remove a pattern if it exists
 - `clear` - remove all patterns
