@@ -13,6 +13,7 @@ import (
 type options struct {
 	local       bool
 	globalScope bool
+	help        bool
 	command     string
 	pattern     string
 }
@@ -24,6 +25,26 @@ var validCommands = map[string]struct{}{
 	"clear":  {},
 	"edit":   {},
 }
+
+const helpText = `Usage:
+	pgi [--local|--global] [--help] <command> [pattern]
+
+Commands:
+	list              Show the current ignore patterns
+	add <pattern>     Add a pattern if it is not already present
+	remove <pattern>  Remove a pattern if it exists
+	clear             Remove all patterns
+	edit              Open the ignore file in your editor
+
+Examples:
+	pgi --help
+	pgi list
+	pgi add "*.log"
+	pgi --global add "*.env"
+	pgi edit
+
+The default scope is local. Use --global to manage the global ignore file.
+`
 
 func runGit(args []string, cwd string, env []string) (string, error) {
 	cmd := exec.Command("git", args...)
@@ -158,6 +179,8 @@ func parseArgs(args []string) (options, error) {
 				opts.local = true
 			case "--global":
 				opts.globalScope = true
+			case "--help":
+				opts.help = true
 			default:
 				if strings.HasPrefix(arg, "--") {
 					return options{}, fmt.Errorf("unknown argument: %s", arg)
@@ -170,6 +193,9 @@ func parseArgs(args []string) (options, error) {
 		positionals = append(positionals, arg)
 	}
 
+	if opts.help {
+		return opts, nil
+	}
 	if opts.local && opts.globalScope {
 		return options{}, errors.New("--local and --global cannot be used together")
 	}
@@ -217,6 +243,10 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
+	}
+	if opts.help {
+		fmt.Print(helpText)
+		return
 	}
 
 	env := os.Environ()

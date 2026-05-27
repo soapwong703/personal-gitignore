@@ -44,6 +44,26 @@ func buildCLI(t *testing.T) string {
 	return bin
 }
 
+func TestHelpOutputShowsUsageAndExamples(t *testing.T) {
+	bin := buildCLI(t)
+	stdout, stderr, err := runBin(t, bin, t.TempDir(), nil, "--help")
+	if err != nil {
+		t.Fatalf("help failed: %v, %s", err, stderr)
+	}
+	if stderr != "" {
+		t.Fatalf("expected no stderr, got: %s", stderr)
+	}
+	if !strings.Contains(stdout, "pgi [--local|--global] [--help] <command> [pattern]") {
+		t.Fatalf("usage line missing from help output: %s", stdout)
+	}
+	if !strings.Contains(stdout, "Examples:") {
+		t.Fatalf("examples section missing from help output: %s", stdout)
+	}
+	if !strings.Contains(stdout, "pgi --global add \"*.env\"") {
+		t.Fatalf("example missing from help output: %s", stdout)
+	}
+}
+
 func runBin(t *testing.T, bin string, cwd string, env map[string]string, args ...string) (string, string, error) {
 	t.Helper()
 	cmd := exec.Command(bin, args...)
