@@ -2,7 +2,6 @@
 set -eu
 
 BIN_DIR="${HOME}/.local/bin"
-API_BASE="https://api.github.com/repos/soapwong703/personal-gitignore/releases/latest"
 RELEASE_BASE="https://github.com/soapwong703/personal-gitignore/releases/latest/download"
 
 download_to_file() {
@@ -21,15 +20,15 @@ download_to_file() {
 
 latest_version() {
   if command -v curl >/dev/null 2>&1; then
-    response=$(curl -fsSL -H 'Accept: application/vnd.github+json' "$API_BASE")
+    redirect_url=$(curl -fsSL -o /dev/null -w '%{url_effective}' "$1")
   elif command -v wget >/dev/null 2>&1; then
-    response=$(wget -qO- --header='Accept: application/vnd.github+json' "$API_BASE")
+    redirect_url=$(wget --server-response --spider "$1" 2>&1 | sed -n 's/^  Location: //p' | tail -n 1)
   else
-    echo "Error: curl or wget is required to query the latest release." >&2
+    echo "Error: curl or wget is required to resolve the latest release." >&2
     exit 1
   fi
 
-  version=$(printf '%s\n' "$response" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)
+  version=$(printf '%s\n' "$redirect_url" | sed -n 's#.*/releases/download/\([^/]*\)/.*#\1#p' | head -n 1)
   if [ -z "$version" ]; then
     echo "Error: unable to determine the latest release version." >&2
     exit 1
@@ -76,7 +75,7 @@ esac
 
 ASSET="pgi_${OS}_${ARCH}.tar.gz"
 URL="${RELEASE_BASE}/${ASSET}"
-VERSION="$(latest_version)"
+VERSION="$(latest_version "$URL")"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT

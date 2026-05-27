@@ -6,14 +6,7 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$ApiBase = "https://api.github.com/repos/soapwong703/personal-gitignore/releases/latest"
 $ReleaseBase = "https://github.com/soapwong703/personal-gitignore/releases/latest/download"
-
-$release = Invoke-RestMethod -Headers @{ Accept = "application/vnd.github+json" } -Uri $ApiBase
-$version = $release.tag_name
-if (-not $version) {
-  throw "Unable to determine the latest release version."
-}
 
 $arch = $env:PROCESSOR_ARCHITECTURE
 if ($env:PROCESSOR_ARCHITEW6432) {
@@ -30,6 +23,44 @@ switch ($arch.ToUpperInvariant()) {
 
 $asset = "pgi_windows_${arch}.zip"
 $url = "$ReleaseBase/$asset"
+
+function Get-LatestVersion {
+  param(
+    [string]$DownloadUrl
+  )
+
+  $request = [System.Net.HttpWebRequest]::Create($DownloadUrl)
+  $request.Method = "HEAD"
+  $request.AllowAutoRedirect = $false
+
+  try {
+    $response = $request.GetResponse()
+    $location = $response.Headers["Location"]
+    $response.Dispose()
+  }
+  catch [System.Net.WebException] {
+    $response = $_.Exception.Response
+    if ($response) {
+      $location = $response.Headers["Location"]
+      $response.Dispose()
+    }
+    else {
+      throw
+    }
+  }
+
+  if (-not $location) {
+    throw "Unable to determine the latest release version."
+  }
+
+  if ($location -match "/releases/download/([^/]+)/") {
+    return $Matches[1]
+  }
+
+  throw "Unable to determine the latest release version."
+}
+
+$version = Get-LatestVersion -DownloadUrl $url
 
 $tmpRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("pgi-" + [guid]::NewGuid().ToString("N"))
 $archive = Join-Path $tmpRoot $asset
