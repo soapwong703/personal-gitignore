@@ -27,18 +27,6 @@ irm https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/instal
 
 Re-run the installer for your platform. It downloads the latest release and replaces the installed `pgi` binary.
 
-macOS and Linux:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
-```
-
-Windows:
-
-```powershell
-irm https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.ps1 | iex
-```
-
 ## Usage
 
 ```bash
