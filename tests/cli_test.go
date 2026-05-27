@@ -190,6 +190,36 @@ func TestAddPatternStartingWithDash(t *testing.T) {
 	}
 }
 
+func TestRemovePatternStartingWithDash(t *testing.T) {
+	bin := buildCLI(t)
+
+	tmpRepo, err := os.MkdirTemp("", "repo-")
+	if err != nil {
+		t.Fatalf("mktemp: %v", err)
+	}
+	init := exec.Command("git", "init")
+	init.Dir = tmpRepo
+	if out, err := init.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v, %s", err, string(out))
+	}
+
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "add", "--cache"); err != nil {
+		t.Fatalf("add --cache failed: %v, %s", err, stderr)
+	}
+
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "remove", "--cache"); err != nil {
+		t.Fatalf("remove --cache failed: %v, %s", err, stderr)
+	}
+
+	out, _, err := runBin(t, bin, tmpRepo, nil, "list")
+	if err != nil {
+		t.Fatalf("list failed: %v", err)
+	}
+	if strings.Contains(out, "--cache") {
+		t.Fatalf("expected --cache to be removed, got: %s", out)
+	}
+}
+
 func TestListFiltersPatternsByGlob(t *testing.T) {
 	bin := buildCLI(t)
 
@@ -264,6 +294,42 @@ func TestListIgnoresCommentedLines(t *testing.T) {
 	}
 	if !strings.Contains(out, "*.log") || !strings.Contains(out, "src/pkg/main.go") {
 		t.Fatalf("expected patterns missing from list output: %s", out)
+	}
+}
+
+func TestClearRemovesNonCommentPatternsOnly(t *testing.T) {
+	bin := buildCLI(t)
+
+	tmpRepo, err := os.MkdirTemp("", "repo-")
+	if err != nil {
+		t.Fatalf("mktemp: %v", err)
+	}
+	init := exec.Command("git", "init")
+	init.Dir = tmpRepo
+	if out, err := init.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v, %s", err, string(out))
+	}
+
+	excludeFile := filepath.Join(tmpRepo, ".git", "info", "exclude")
+	content := "# keep me\n*.log\n  # keep me too\nsrc/pkg/main.go\n"
+	if err := os.WriteFile(excludeFile, []byte(content), 0o644); err != nil {
+		t.Fatalf("write exclude: %v", err)
+	}
+
+	if _, stderr, err := runBin(t, bin, tmpRepo, nil, "clear"); err != nil {
+		t.Fatalf("clear failed: %v, %s", err, stderr)
+	}
+
+	data, err := os.ReadFile(excludeFile)
+	if err != nil {
+		t.Fatalf("read exclude: %v", err)
+	}
+	got := string(data)
+	if strings.Contains(got, "*.log") || strings.Contains(got, "src/pkg/main.go") {
+		t.Fatalf("non-comment patterns should be removed, got: %q", got)
+	}
+	if !strings.Contains(got, "# keep me") || !strings.Contains(got, "# keep me too") {
+		t.Fatalf("comment lines should be preserved, got: %q", got)
 	}
 }
 

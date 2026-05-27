@@ -3,12 +3,13 @@ package cmd
 import "github.com/spf13/cobra"
 
 var removeCmd = &cobra.Command{
-	Use:     "remove <pattern>",
-	Short:   "Remove a pattern",
-	Long:    "Remove matching pattern lines from the selected ignore file.",
-	Example: "pgi remove \"*.log\"",
-	Args:    cobra.ExactArgs(1),
-	PreRunE: prepareRuntimeState,
+	Use:                "remove <pattern>",
+	Short:              "Remove a pattern",
+	Long:               "Remove matching pattern lines from the selected ignore file.",
+	Example:            "pgi remove \"*.log\"",
+	Args:               cobra.ExactArgs(1),
+	DisableFlagParsing: true,
+	PreRunE:            prepareRuntimeState,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		state, err := getRuntimeState(cmd)
 		if err != nil {

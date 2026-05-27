@@ -14,7 +14,18 @@ var clearCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return writePatterns(state.ignoreFile, []string{})
+		patterns, err := readPatterns(state.ignoreFile)
+		if err != nil {
+			return err
+		}
+
+		kept := make([]string, 0, len(patterns))
+		for _, pattern := range patterns {
+			if isCommentLine(pattern) {
+				kept = append(kept, pattern)
+			}
+		}
+		return writePatterns(state.ignoreFile, kept)
 	},
 }
 
