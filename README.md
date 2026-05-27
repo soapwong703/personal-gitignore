@@ -17,10 +17,10 @@ macOS and Linux:
 curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
 ```
 
-Windows PowerShell:
+Windows PowerShell / PowerShell 7+:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.ps1 | iex"
+irm https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.ps1 | iex
 ```
 
 ## Uninstall
