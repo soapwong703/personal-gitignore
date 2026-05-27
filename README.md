@@ -23,20 +23,20 @@ Windows:
 irm https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.ps1 | iex
 ```
 
-## Uninstall
+## Update
 
-This removes the installed command only. Your ignore files remain untouched.
+Re-run the same installer for your platform. It downloads the latest release and replaces the existing `pgi` binary.
 
 macOS and Linux:
 
 ```sh
-rm -f "$HOME/.local/bin/pgi"
+curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
 ```
 
-Windows PowerShell:
+Windows:
 
 ```powershell
-Remove-Item -Force "$HOME\.local\bin\pgi.exe"
+irm https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.ps1 | iex
 ```
 
 ## Usage
@@ -66,4 +66,20 @@ pgi list "*.log"
 pgi add "*.log"
 pgi --global add "*.env"
 pgi edit
+```
+
+## Uninstall
+
+This removes the installed command only. Your ignore files remain untouched.
+
+macOS and Linux:
+
+```sh
+rm -f "$HOME/.local/bin/pgi"
+```
+
+Windows PowerShell:
+
+```powershell
+Remove-Item -Force "$HOME\.local\bin\pgi.exe"
 ```
