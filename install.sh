@@ -20,9 +20,9 @@ download_to_file() {
 
 latest_version() {
   if command -v curl >/dev/null 2>&1; then
-    redirect_url=$(curl -fsSL -o /dev/null -w '%{url_effective}' "$1")
+    redirect_url=$(curl -fsSI "$1" | sed -n 's/^[Ll]ocation: //p' | head -n 1)
   elif command -v wget >/dev/null 2>&1; then
-    redirect_url=$(wget --server-response --spider "$1" 2>&1 | sed -n 's/^  Location: //p' | tail -n 1)
+    redirect_url=$(wget --server-response --spider "$1" 2>&1 | sed -n 's/^[Ll]ocation: //p' | head -n 1)
   else
     echo "Error: curl or wget is required to resolve the latest release." >&2
     exit 1
