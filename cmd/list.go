@@ -10,7 +10,7 @@ var listCmd = &cobra.Command{
 	Use:     "list [glob]",
 	Short:   "Show the current ignore patterns",
 	Long:    "List patterns in the selected ignore file, optionally filtered by a glob.",
-	Example: "pgi list \"*.log\"",
+	Example: "  pgi list \"*.log\"",
 	Args:    cobra.MaximumNArgs(1),
 	PreRunE: prepareRuntimeState,
 	RunE: func(cmd *cobra.Command, args []string) error {

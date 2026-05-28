@@ -327,12 +327,21 @@ func resolveEditorParts(editor string, source string, goos string, lookPath func
 	return parts, nil
 }
 
-func openEditor(path string, env []string) error {
-	editor, source, err := chooseEditorCommand(env, func() (string, error) {
-		return runGit([]string{"var", "GIT_EDITOR"}, "", env)
-	})
-	if err != nil {
-		return err
+func openEditor(path string, env []string, overrideEditor string) error {
+	var editor string
+	var source string
+	var err error
+
+	if strings.TrimSpace(overrideEditor) != "" {
+		editor = overrideEditor
+		source = "CLI"
+	} else {
+		editor, source, err = chooseEditorCommand(env, func() (string, error) {
+			return runGit([]string{"var", "GIT_EDITOR"}, "", env)
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	parts, err := resolveEditorParts(editor, source, runtime.GOOS, exec.LookPath)

@@ -6,7 +6,7 @@ var addCmd = &cobra.Command{
 	Use:     "add <pattern...>",
 	Short:   "Add a pattern",
 	Long:    "Append one or more patterns to the selected ignore file if they are not already present.",
-	Example: "pgi add \"*.log\"",
+	Example: "  pgi add \"*.log\"",
 	Args:    cobra.MinimumNArgs(1),
 	PreRunE: prepareRuntimeState,
 	RunE: func(cmd *cobra.Command, args []string) error {

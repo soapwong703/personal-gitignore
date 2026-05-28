@@ -62,6 +62,10 @@ pgi add "*.log"
 pgi --global add "*.env"
 pgi remove -- --prefix
 pgi edit
+# override your configured editor for a single invocation:
+pgi edit --editor "nvim"
+# or use GUI editors that wait for the file to close:
+pgi edit --editor "code --wait"
 ```
 
 ## Uninstall

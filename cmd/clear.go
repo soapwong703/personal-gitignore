@@ -6,7 +6,7 @@ var clearCmd = &cobra.Command{
 	Use:     "clear",
 	Short:   "Remove all patterns",
 	Long:    "Remove all non-comment patterns from the selected ignore file.",
-	Example: "pgi clear",
+	Example: "  pgi clear",
 	Args:    cobra.NoArgs,
 	PreRunE: prepareRuntimeState,
 	RunE: func(cmd *cobra.Command, args []string) error {

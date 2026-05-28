@@ -6,7 +6,7 @@ var removeCmd = &cobra.Command{
 	Use:     "remove <pattern...>",
 	Short:   "Remove a pattern",
 	Long:    "Remove matching pattern lines from the selected ignore file for one or more patterns.",
-	Example: "pgi remove \"*.log\"",
+	Example: "  pgi remove \"*.log\"",
 	Args:    cobra.MinimumNArgs(1),
 	PreRunE: prepareRuntimeState,
 	RunE: func(cmd *cobra.Command, args []string) error {
