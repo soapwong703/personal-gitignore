@@ -17,6 +17,17 @@ macOS and Linux:
 curl -fsSL https://raw.githubusercontent.com/soapwong703/personal-gitignore/main/install.sh | sh
 ```
 
+The installer installs to `~/.local/bin` by default. If that directory is not already on
+your `PATH`, the script prints a reminder with the exact `export PATH=...`
+line to use.
+
+If you want `pgi` to be available everywhere after installation, add this to
+your shell profile and restart the shell:
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
 Windows PowerShell:
 
 ```powershell

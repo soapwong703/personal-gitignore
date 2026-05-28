@@ -1,12 +1,9 @@
-param(
-  [string]$BinDir = (Join-Path $HOME ".local\bin")
-)
-
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $ReleaseBase = "https://github.com/soapwong703/personal-gitignore/releases/latest/download"
+$BinDir = Join-Path $HOME ".local\bin"
 
 $arch = $env:PROCESSOR_ARCHITECTURE
 if ($env:PROCESSOR_ARCHITEW6432) {
@@ -82,6 +79,11 @@ try {
   Copy-Item -Force -Path $source -Destination $destination
 
   Write-Output "Installed pgi $version to $destination"
+
+  $pathEntries = $env:Path -split ';'
+  if ($pathEntries -notcontains $BinDir) {
+    Write-Warning "${BinDir} is not on PATH. Add it to PATH, for example:`n  `$env:Path = `"$BinDir;$env:Path`"`nThen restart your shell or profile session."
+  }
 }
 finally {
   $client.Dispose()

@@ -38,20 +38,8 @@ latest_version() {
 }
 
 while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --bin-dir)
-      if [ "$#" -lt 2 ]; then
-        echo "Error: --bin-dir requires a value" >&2
-        exit 1
-      fi
-      BIN_DIR="$2"
-      shift 2
-      ;;
-    *)
-      echo "Error: unknown argument: $1" >&2
-      exit 1
-      ;;
-  esac
+  echo "Error: unknown argument: $1" >&2
+  exit 1
 done
 
 case "$(uname -s)" in
@@ -92,3 +80,15 @@ PKG_DIR="$TMP_DIR/pgi_${OS}_${ARCH}"
 install -m 0755 "$PKG_DIR/pgi" "$BIN_DIR/pgi"
 
 echo "Installed pgi ${VERSION} to $BIN_DIR/pgi"
+
+case ":$PATH:" in
+  *":$BIN_DIR:"*) ;;
+  *)
+    cat >&2 <<EOF
+Warning: $BIN_DIR is not on PATH.
+Add it to PATH, for example:
+  export PATH="$BIN_DIR:\$PATH"
+Then restart your shell or source your shell profile.
+EOF
+    ;;
+esac
