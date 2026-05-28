@@ -82,7 +82,12 @@ try {
 
   $pathEntries = $env:Path -split ';'
   if ($pathEntries -notcontains $BinDir) {
-    Write-Warning "${BinDir} is not on PATH. Add it to PATH, for example:`n  `$env:Path = `"$BinDir;$env:Path`"`nThen restart your shell or profile session."
+    Write-Warning @"
+${BinDir} is not on PATH.
+Add it to PATH with:
+
+  `$env:Path = `"$BinDir;$env:Path`"
+"@
   }
 }
 finally {

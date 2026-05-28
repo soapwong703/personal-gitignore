@@ -84,11 +84,9 @@ echo "Installed pgi ${VERSION} to $BIN_DIR/pgi"
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *)
-    cat >&2 <<EOF
-Warning: $BIN_DIR is not on PATH.
-Add it to PATH, for example:
-  export PATH="$BIN_DIR:\$PATH"
-Then restart your shell or source your shell profile.
-EOF
+    echo "Warning: $BIN_DIR is not on PATH." >&2
+    echo "Add it to PATH with:" >&2
+    echo >&2
+    echo "  export PATH=\"$BIN_DIR:\$PATH\"" >&2
     ;;
 esac
